@@ -1,4 +1,4 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   atomFeedQueryType,
   atomTagName,
@@ -10,10 +10,10 @@ import { Link } from "react-router-dom";
 
 export function FeedToggle() {
   // ANCHOR store
-  const [isLogin] = useAtom(atomIsLogin);
-  const [feedType] = useAtom(atomFeedQueryType);
-  const [tagName] = useAtom(atomTagName);
-  const [, setFeedType] = useAtom(atomSetFeedQuery);
+  const isLogin = useAtomValue(atomIsLogin);
+  const feedType = useAtomValue(atomFeedQueryType);
+  const tagName = useAtomValue(atomTagName);
+  const setFeedType = useSetAtom(atomSetFeedQuery);
 
   // ANCHOR initialize
   useEffect(() => {

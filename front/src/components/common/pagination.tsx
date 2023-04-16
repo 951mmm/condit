@@ -1,4 +1,4 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { atomPage, atomPageLink, atomQueryLimit } from "../../stores/feed";
 import { Link } from "react-router-dom";
 
@@ -9,8 +9,8 @@ interface PaginationProps {
 export function Pagination({ articlesCount }: PaginationProps) {
   // ANCHOR store
   const [page, setPage] = useAtom(atomPage);
-  const [limit] = useAtom(atomQueryLimit);
-  const [pageLink] = useAtom(atomPageLink);
+  const limit = useAtomValue(atomQueryLimit);
+  const pageLink = useAtomValue(atomPageLink);
   const pageCnt = Math.ceil(articlesCount / limit);
   const addOne = (n: number) => n + 1;
   const pageIndex = [...Array(pageCnt).keys()].map(addOne);

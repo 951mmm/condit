@@ -1,4 +1,4 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { atomFollow } from "../../stores/subscribe";
 import { Profile } from "../../api/profile";
 import { errHandler } from "../../utils";
@@ -19,7 +19,7 @@ export function FollowButton({
   const [following, setFollowing] = useState(propFollowing);
   const [loading, setLoading] = useState(false);
   // ANCHOR store
-  const [isLogin] = useAtom(atomIsLogin);
+  const isLogin = useAtomValue(atomIsLogin);
   const navigate = useNavigate();
 
   // ANCHOR event

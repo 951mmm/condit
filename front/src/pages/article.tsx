@@ -1,6 +1,6 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { atomIsLogin, atomUser } from "../stores/auth";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { atomArticle, atomComments } from "../stores/article";
@@ -22,8 +22,8 @@ export function Article() {
   // ANCHOR store
   const [article, setArticle] = useAtom(atomArticle);
   const [comments, setComments] = useAtom(atomComments);
-  const [isLogin] = useAtom(atomIsLogin);
-  const [user] = useAtom(atomUser);
+  const isLogin = useAtomValue(atomIsLogin);
+  const user = useAtomValue(atomUser);
   const { URLSlug } = useParams();
   const navigate = useNavigate();
 

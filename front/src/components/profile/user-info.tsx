@@ -1,12 +1,9 @@
-import { useAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { atomUser } from "../../stores/auth";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Profile } from "../../api/profile";
-import { errHandler } from "../../utils";
-import { atomFollow } from "../../stores/subscribe";
 import { FollowButton } from "../common/follow-button";
-import { atomSetFeedQuery } from "../../stores/feed";
 
 interface UserInfoProps {
   userId: string;
@@ -24,7 +21,7 @@ export function UserInfo({ userId }: UserInfoProps) {
   const [loading, setLoading] = useState(false);
 
   // ANCHOR store
-  const [user] = useAtom(atomUser);
+  const user = useAtomValue(atomUser);
   const navigate = useNavigate();
 
   // ANCHOR effect

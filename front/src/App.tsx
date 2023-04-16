@@ -4,7 +4,7 @@ import { Home } from "./pages/home";
 import { Article } from "./pages/article";
 import { Header } from "./components/header";
 import { Footer } from "./components/footer";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { atomIsLogin, atomUser } from "./stores/auth";
 import { User } from "./api/user";
 import { Settings } from "./pages/settings";
@@ -17,8 +17,8 @@ function App() {
   const [loading, setLoading] = useState(false);
 
   // ANCHOR store
-  const [, setIsLogin] = useAtom(atomIsLogin);
-  const [, setUser] = useAtom(atomUser);
+  const setIsLogin = useSetAtom(atomIsLogin);
+  const setUser = useSetAtom(atomUser);
 
   // ANCHOR initialize
   useEffect(() => {

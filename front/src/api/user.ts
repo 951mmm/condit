@@ -39,7 +39,7 @@ export namespace User {
       };
     }
 
-    export function handler(body: UserReq): Promise<User> {
+    export function handler(body: UserReq): Promise<{user: User}> {
       return POST("/users", body);
     }
   }

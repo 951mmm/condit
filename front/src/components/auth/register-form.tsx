@@ -1,6 +1,6 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { User } from "../../api/user";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { atomError, atomIsLogin, atomUser } from "../../stores/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -15,8 +15,8 @@ export function RegisterForm() {
 
   // ANCHOR store
   const [isLogin, setIsLogin] = useAtom(atomIsLogin);
-  const [, setUser] = useAtom(atomUser);
-  const [, setError] = useAtom(atomError);
+  const setUser = useSetAtom(atomUser);
+  const setError = useSetAtom(atomError);
   const navigate = useNavigate();
 
   // ANCHOR event

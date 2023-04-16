@@ -1,8 +1,8 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { atomError } from "../../stores/auth";
 
 export function LoginError() {
-  const [{ index, msgs }] = useAtom(atomError);
+  const { index, msgs } = useAtomValue(atomError);
   const msg = msgs.join(" ");
   return (
     <ul className="error-messages">

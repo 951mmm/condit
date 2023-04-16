@@ -1,4 +1,4 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { MouseEvent, useState } from "react";
 import { atomIsLogin } from "../../stores/auth";
 import { useNavigate } from "react-router-dom";
@@ -24,7 +24,7 @@ export function FavoriteButton({
   const [loading, setLoading] = useState(false);
 
   // ANCHOR store
-  const [isLogin] = useAtom(atomIsLogin);
+  const isLogin = useAtomValue(atomIsLogin);
   const navigate = useNavigate();
 
   // ANCHOR event

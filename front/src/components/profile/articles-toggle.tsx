@@ -1,5 +1,5 @@
-import { useAtom } from "jotai";
-import { NavLink, useParams } from "react-router-dom";
+import {  useAtomValue, useSetAtom } from "jotai";
+import { NavLink } from "react-router-dom";
 import { atomFeedQueryType, atomSetFeedQuery } from "../../stores/feed";
 import { useEffect } from "react";
 
@@ -9,8 +9,8 @@ interface ArticlesToggleProps {
 
 export function ArtiflesToggle({ userId }: ArticlesToggleProps) {
   // ANCHOR store
-  const [feedType] = useAtom(atomFeedQueryType);
-  const [, setFeedType] = useAtom(atomSetFeedQuery);
+  const feedType = useAtomValue(atomFeedQueryType);
+  const setFeedType = useSetAtom(atomSetFeedQuery);
 
   // ANCHOR effect
   useEffect(() => {

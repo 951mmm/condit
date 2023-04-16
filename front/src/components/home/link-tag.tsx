@@ -1,4 +1,4 @@
-import { useAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import { atomSetFeedQuery } from "../../stores/feed";
 
 interface LinkTagProps {
@@ -6,7 +6,7 @@ interface LinkTagProps {
 }
 export function LinkTag({ name }: LinkTagProps) {
   // ANCHOR store
-  const [, setFeedQuery] = useAtom(atomSetFeedQuery);
+  const setFeedQuery = useSetAtom(atomSetFeedQuery);
 
   return (
     <a

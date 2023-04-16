@@ -1,4 +1,4 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { atomFeedQuery, atomFeedQueryType, atomPage, atomQueryLimit } from "../../stores/feed";
 import { Article } from "../../api/article";
 import { useEffect, useState } from "react";
@@ -13,10 +13,10 @@ export function Feed() {
   const [articleCount, setArticleCount] = useState(0); 
   
   // ANCHOR store
-  const [feedType] = useAtom(atomFeedQueryType);
-  const [feedQuery] = useAtom(atomFeedQuery);
+  const feedType = useAtomValue(atomFeedQueryType);
+  const feedQuery = useAtomValue(atomFeedQuery);
   const [page, setPage] = useAtom(atomPage);
-  const [limit] = useAtom(atomQueryLimit);
+  const limit = useAtomValue(atomQueryLimit);
 
   // ANCHOR effect
   useEffect(() => {

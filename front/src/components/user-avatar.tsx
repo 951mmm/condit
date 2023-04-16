@@ -1,12 +1,10 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { NavLink } from "react-router-dom";
 import { atomUser } from "../stores/auth";
-import { atomSetFeedQuery } from "../stores/feed";
 
 export function UserAvatar() {
   // ANCHOR store
-  const [user] = useAtom(atomUser);
-  const [, setFeedType] = useAtom(atomSetFeedQuery);
+  const user = useAtomValue(atomUser);
   return (
     <li className="nav-item">
       <NavLink

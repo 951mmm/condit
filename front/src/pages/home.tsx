@@ -3,17 +3,17 @@ import { Feed } from "../components/common/feed";
 import { FeedToggle } from "../components/home/feed-toggle";
 import { PopTagsBar } from "../components/home/pop-tags-bar";
 import { useEffect } from "react";
-import { useAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import { atomQueryLimit } from "../stores/feed";
 
 export function Home() {
   // ANCHOR store
-  const [, setLimit] = useAtom(atomQueryLimit);
+  const setLimit = useSetAtom(atomQueryLimit);
 
   // ANCHOR initialize
   useEffect(() => {
     setLimit(10);
-  }, [])
+  }, []);
 
   return (
     <>
