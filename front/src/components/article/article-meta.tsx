@@ -10,6 +10,8 @@ import { atomUser } from "../../stores/auth";
 export function ArticleMeta() {
   const article = useAtomValue(atomArticle);
   const user = useAtomValue(atomUser);
+  console.log(user.username);
+  console.log(article?.author.username)
 
   if (!article) return <p>loading...</p>;
   return (
@@ -29,7 +31,7 @@ export function ArticleMeta() {
           })}
         </span>
       </div>
-      {user.username === article.author.username ? (
+      {user.username === article?.author.username ? (
         <ArticleSettingButtons slug={article.slug} />
       ) : (
         <>

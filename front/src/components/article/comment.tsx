@@ -14,7 +14,7 @@ export function Comment({ comment, username, slug }: CommentProps) {
   const setComments = useSetAtom(atomComments);
 
   // ANCHOR event
-  async function onClick() {
+  async function onDeleteComment() {
     await CommentApi.del.handler(slug, comment.id);
     setComments((comments) =>
       comments.filter((innerComment) => innerComment.id !== comment.id)
@@ -52,7 +52,7 @@ export function Comment({ comment, username, slug }: CommentProps) {
         </span>
         {comment.author.username === username ? (
           <span className="mod-options">
-            <i className="ion-trash-a" onClick={onClick} />
+            <i className="ion-trash-a" onClick={onDeleteComment} />
           </span>
         ) : (
           <></>

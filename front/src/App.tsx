@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Home } from "./pages/home";
 import { Article } from "./pages/article";
 import { Header } from "./components/header";
@@ -10,6 +10,7 @@ import { User } from "./api/user";
 import { Settings } from "./pages/settings";
 import { Auth } from "./pages/auth";
 import { Profile } from "./pages/profile";
+import { Editor } from "./pages/editor";
 
 function App() {
   // ANCHOR state
@@ -56,8 +57,11 @@ function App() {
         <Route path="/login" element={<Auth type="login" />} />
         <Route path="/register" element={<Auth type="register" />} />
         <Route path="/article/:URLSlug" element={<Article />} />
+        <Route path="/editor" element={<Editor type="new" />} />
+        <Route path="/editor/:URLSlug" element={<Editor type="update" />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/profile/:userId/*" element={<Profile />} />
+        <Route path="*" element={<Navigate to="/" replace={true} />} />
       </Routes>
       <Footer />
     </BrowserRouter>
