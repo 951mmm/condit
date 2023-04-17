@@ -12,6 +12,7 @@ import remarkGfm from "remark-gfm";
 import { ArticleTag } from "../components/common/article-tag";
 import { Comment as CommentApi } from "../api/comment";
 import { Comment } from "../components/article/comment";
+import useMeasure from "react-use-measure";
 
 export function Article() {
   // ANCHOR state
@@ -26,6 +27,7 @@ export function Article() {
   const user = useAtomValue(atomUser);
   const { URLSlug } = useParams();
   const navigate = useNavigate();
+  const [ref, bounds] = useMeasure();
 
   // ANCHOR event
   async function onCommentPublish(e: FormEvent<HTMLFormElement>) {
@@ -82,6 +84,14 @@ export function Article() {
       <HelmetProvider>
         <Helmet>
           <title>{article?.title}</title>
+          <style type="text/css">
+            {`
+              .article-content img {
+                width: ${bounds.width/2}px;
+                margin: auto;
+              }
+            `}
+          </style>
         </Helmet>
       </HelmetProvider>
       <div className="article-page">
@@ -93,7 +103,7 @@ export function Article() {
         </div>
         <div className="container page">
           <div className="row article-content">
-            <div className="col-md-12">
+            <div ref={ref} className="col-md-12">
               <ReactMarkdown
                 children={article?.body!}
                 remarkPlugins={[remarkGfm]}

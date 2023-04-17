@@ -10,7 +10,7 @@ interface fetcherProps {
 async function fetcher({ method, url, body, signal }: fetcherProps) {
   const jwtToken = localStorage.getItem("jwtToken");
   const config = {
-    baseURL: "https://api.realworld.io/api",
+    baseURL: import.meta.env.VITE_BASE_URL_PUBLIC,
     headers: {
       Authorization: !!jwtToken ? `Token ${jwtToken}` : "",
     },

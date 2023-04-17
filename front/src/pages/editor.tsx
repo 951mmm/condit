@@ -13,6 +13,9 @@ import { RemovableTag } from "../components/editor/removable-tag";
 import { atomTagList } from "../stores/editor";
 import { Article as ArticleApi } from "../api/article";
 import { errHandler } from "../utils";
+import { ReactMarkdown } from "react-markdown/lib/react-markdown";
+import remarkGfm from "remark-gfm";
+import useMeasure from "react-use-measure";
 
 interface EditorProps {
   type: "new" | "update";
@@ -26,6 +29,7 @@ export function Editor({ type }: EditorProps) {
     body: "",
   });
   const [tag, setTag] = useState("");
+  const [preview, setPreview] = useState(false);
   const [error, setError] = useState({
     index: 0,
     msg: [],
@@ -33,6 +37,8 @@ export function Editor({ type }: EditorProps) {
   const errMsg = error.msg.join(" ");
   const [loading, setLoading] = useState(false);
   const [publishLoading, setPublishLoading] = useState(false);
+  const [previewHeight, setPreviewHeight] = useState(0);
+  const [previewWidth, setPreviewWidth] = useState(0);
 
   // ANCHOR store
   const isLogin = useAtomValue(atomIsLogin);
@@ -40,6 +46,7 @@ export function Editor({ type }: EditorProps) {
   const [tagList, setTagList] = useAtom(atomTagList);
   const navigate = useNavigate();
   const { URLSlug } = useParams();
+  const [ref, bounds] = useMeasure();
 
   // ANCHOR event
   function onChange(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -68,9 +75,7 @@ export function Editor({ type }: EditorProps) {
     }
   }
 
-  async function onArticlePublish(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setPublishLoading(true);
+  async function publishArticle() {
     try {
       let data: { article: ArticleApi.Article };
       switch (type) {
@@ -112,7 +117,6 @@ export function Editor({ type }: EditorProps) {
           });
       }
     }
-    setLoading(false);
   }
 
   // ANCHOR effect
@@ -144,6 +148,13 @@ export function Editor({ type }: EditorProps) {
     }
   }, [URLSlug, isLogin, user.username]);
 
+  useEffect(() => {
+    if (preview === true) {
+      setPreviewHeight(bounds.height);
+      setPreviewWidth(bounds.width);
+    }
+  }, [preview]);
+
   // ANCHOR render
   if (!isLogin) {
     navigate("/", { replace: true });
@@ -154,7 +165,29 @@ export function Editor({ type }: EditorProps) {
   return (
     <>
       <HelmetProvider>
-        <Helmet>Editor - Conduit</Helmet>
+        <Helmet>
+          <title>Editor - Conduit</title>
+          <style type="text/css">
+            {`
+            .editor-preview {
+              height: ${previewHeight}px;
+              padding-left: .5rem;
+              padding-top: .75rem;
+              padding-buttom: .75rem;
+              padding-right: .5rem;
+              overflow-y: scroll;
+              border: 1px solid rgba(0,0,0,.15);
+              border-radius: .25rem;
+              word-break: break-all;
+            }
+            
+            .editor-preview img {
+              width: ${previewWidth/2}px;
+              margin: auto;
+            }
+            `}
+          </style>
+        </Helmet>
       </HelmetProvider>
 
       <div className="editor-page">
@@ -172,7 +205,14 @@ export function Editor({ type }: EditorProps) {
                 }
               </ul>
 
-              <form onSubmit={onArticlePublish}>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setPublishLoading(true);
+                  await publishArticle();
+                  setPublishLoading(false);
+                }}
+              >
                 <fieldset>
                   <fieldset className="form-group">
                     <input
@@ -197,15 +237,42 @@ export function Editor({ type }: EditorProps) {
                     />
                   </fieldset>
                   <fieldset className="form-group">
-                    <textarea
-                      className="form-control"
-                      name="body"
-                      rows={8}
-                      placeholder="Write your article (in markdown)"
-                      value={editor.body}
-                      onChange={onChange}
-                      disabled={publishLoading}
-                    ></textarea>
+                    {!preview ? (
+                      <textarea
+                        ref={ref}
+                        className="form-control"
+                        name="body"
+                        rows={20}
+                        placeholder="Write your article (in markdown)"
+                        value={editor.body}
+                        onChange={onChange}
+                        disabled={publishLoading}
+                      ></textarea>
+                    ) : (
+                      <ReactMarkdown
+                        children={editor.body}
+                        remarkPlugins={[remarkGfm]}
+                        className="editor-preview"
+                      />
+                    )}
+                  </fieldset>
+                  <fieldset className="form-group">
+                    <button
+                      className="btn btn-sm 
+                      pull-xs-right 
+                      btn-secondary"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPreview((preview) => !preview);
+                      }}
+                    >
+                      <i
+                        className={`${
+                          preview ? "ion-eye-disabled" : "ion-eye"
+                        }`}
+                      />
+                      {" Preview"}
+                    </button>
                   </fieldset>
                   <fieldset className="form-group">
                     <input
@@ -224,7 +291,10 @@ export function Editor({ type }: EditorProps) {
                       ))}
                     </div>
                   </fieldset>
-                  <button className="btn btn-lg pull-xs-right btn-primary">
+                  <button
+                    className="btn btn-lg pull-xs-right btn-primary"
+                    disabled={publishLoading}
+                  >
                     Publish Article
                   </button>
                 </fieldset>
