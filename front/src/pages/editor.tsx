@@ -6,7 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { atomIsLogin, atomUser } from "../stores/auth";
+import { atomError, atomIsLogin, atomUser } from "../stores/auth";
 import { useNavigate, useParams } from "react-router-dom";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { RemovableTag } from "../components/editor/removable-tag";
@@ -30,20 +30,18 @@ export function Editor({ type }: EditorProps) {
   });
   const [tag, setTag] = useState("");
   const [preview, setPreview] = useState(false);
-  const [error, setError] = useState({
-    index: 0,
-    msg: [],
-  });
-  const errMsg = error.msg.join(" ");
+
   const [loading, setLoading] = useState(false);
   const [publishLoading, setPublishLoading] = useState(false);
   const [previewHeight, setPreviewHeight] = useState(0);
   const [previewWidth, setPreviewWidth] = useState(0);
-
+  
   // ANCHOR store
   const isLogin = useAtomValue(atomIsLogin);
   const user = useAtomValue(atomUser);
   const [tagList, setTagList] = useAtom(atomTagList);
+  const [error, setError] = useAtom(atomError); // abstruct state should be managed by atom;
+  const errMsg = error.msgs.join(" ");
   const navigate = useNavigate();
   const { URLSlug } = useParams();
   const [ref, bounds] = useMeasure();
@@ -103,17 +101,17 @@ export function Editor({ type }: EditorProps) {
         errMsg.title &&
           setError({
             index: 1,
-            msg: errMsg.title,
+            msgs: errMsg.title,
           });
         errMsg.description &&
           setError({
             index: 2,
-            msg: errMsg.description,
+            msgs: errMsg.description,
           });
         errMsg.body &&
           setError({
             index: 3,
-            msg: errMsg.body,
+            msgs: errMsg.body,
           });
       }
     }
