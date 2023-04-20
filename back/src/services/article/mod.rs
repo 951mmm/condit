@@ -19,5 +19,10 @@ pub struct ResArticle {
     #[serde(rename = "updatedAt")]
     pub updated_at: String,
 
+    pub favorited: bool,
+
+    #[serde(rename ="favoritesCount")]
+    pub favorites_count: i64,
+
     pub author: crate::services::profile::ResProfile
 }

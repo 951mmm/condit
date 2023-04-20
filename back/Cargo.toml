@@ -6,3 +6,19 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+async-std = { version = "1.12.0", features = ["attributes"] }
+chrono = { version = "0.4.24", features = ["serde"] }
+dotenv = "0.15.0"
+jsonwebtoken = "8.3.0"
+serde = { version = "1.0.160", features = ["derive"] }
+serde_json = "1.0.96"
+sqlx = { version = "0.6.3", features = ["postgres", "runtime-async-std-native-tls", "macros", "all-types", "uuid"] }
+tide = "0.16.0"
+uuid = { version = "1.3.1", features = ["v4", "serde"] }
+
+[dev-dependencies]
+tide-testing = "0.1.3"
+
+[features]
+debug = []
+without_token = []
