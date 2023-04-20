@@ -1,6 +1,6 @@
+pub mod get;
 pub mod login;
 pub mod post;
-pub mod get;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
 pub struct ResAuthUser {
@@ -34,11 +34,13 @@ fn gen_token(username: String, id: uuid::Uuid) -> tide::Result<String> {
     let jwt_key = std::env::var("JWT_KEY")?;
 
     let exp = chrono::Utc::now()
-        .checked_add_signed(chrono::Duration::days(3))
+        .checked_add_signed(chrono::Duration::seconds(10))
         .unwrap_or(chrono::Utc::now())
         .timestamp();
 
-    let jwt_payload = super::JWTPayload {
+    tide::log::info!("fresh token with exp: {}", exp);
+
+    let jwt_payload = crate::middlewares::jwt_token::JWTPayload {
         username,
         id: id.to_string(),
         exp,

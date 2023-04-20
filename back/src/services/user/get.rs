@@ -13,9 +13,9 @@ pub struct Res {
 }
 
 pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
-    let payload = req.ext::<JWTPayload>().unwrap();
+    let payload = req.ext::<crate::middlewares::jwt_token::JWTPayload>().unwrap();
 
-    let JWTPayload { id, .. } = payload;
+    let crate::middlewares::jwt_token::JWTPayload { id, .. } = payload;
 
     let db_pool = req.state().postgres_pool.clone();
 

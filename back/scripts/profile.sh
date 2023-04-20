@@ -10,7 +10,7 @@ if [ $method != "GET" ]; then
 url=${base}/profiles/$2/follow
 fi
 
-token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6IjkyOTgzZGM2LTRlNWUtNGFhNi1iYzdmLTJmODM4ZGMzOGNmOSIsInVzZXJuYW1lIjoiamFjayIsImV4cCI6MTY4MjE3MDMzNX0.JZFbkf73GLLjff7jb3GJVMJ-aUx40T9c-VoIOkfBmP8"
+token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6IjkyOTgzZGM2LTRlNWUtNGFhNi1iYzdmLTJmODM4ZGMzOGNmOSIsInVzZXJuYW1lIjoiamFjayIsImV4cCI6MTY4MjAwOTEzOH0.LWcdhjuqHIAhQY8SpL0cwzyhQTJQEsN2j3hSAD_PYUM"
 
 
 curl $cfg \

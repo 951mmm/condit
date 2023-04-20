@@ -21,9 +21,9 @@ pub fn get_follower_and_followee(
 ) -> tide::Result<(String, String)> {
     let followee = req.param("username")?;
 
-    let payload = req.ext::<JWTPayload>().unwrap();
+    let payload = req.ext::<crate::middlewares::jwt_token::JWTPayload>().unwrap();
 
-    let JWTPayload {
+    let crate::middlewares::jwt_token::JWTPayload {
         username: follower, ..
     } = payload;
 
@@ -35,12 +35,24 @@ pub mod get {
     use super::*;
 
     pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
-        let (follower, followee) = get_follower_and_followee(&req)?;
+        let followee = req.param("username")?;
+
+        let followee = String::from(followee);
 
         let db_pool = req.state().postgres_pool.clone();
 
-        // set res body with 'profile'
-        let profile = crate::applications::profile::get(db_pool, follower, followee).await?;
+        let profile = match req.ext::<crate::middlewares::jwt_token::JWTPayload>() {
+            Some(payload) => {
+                let crate::middlewares::jwt_token::JWTPayload {
+                    username: follower, ..
+                } = payload;
+
+                let follower = String::from(follower);
+
+                crate::applications::profile::get(db_pool, follower, followee).await?
+            },
+            None => crate::applications::profile::get_with_username_without_auth(db_pool, followee).await?
+        };
 
         response_ok_and_json(Res { profile })
     }

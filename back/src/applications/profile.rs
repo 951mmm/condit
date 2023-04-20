@@ -58,6 +58,30 @@ pub async fn get_without_auth(
     Ok(row)
 }
 
+pub async fn get_with_username_without_auth(
+    db_pool: sqlx::PgPool,
+    followee: String,
+) -> tide::Result<crate::services::profile::ResProfile> {
+    let row = sqlx::query_as_unchecked!(
+        crate::services::profile::ResProfile,
+        r#"
+        with following_false as (
+            select false as following
+        )
+        select 
+            username,
+            bio,
+            image,
+            following
+        from condituser
+        cross join following_false where username=$1;
+        "#,
+        followee
+    ).fetch_one(&db_pool)
+    .await?;
+    Ok(row)
+}
+
 pub async fn follow(db_pool: sqlx::PgPool, follower: String, followee: String) -> sqlx::Result<()> {
     match sqlx::query!(
         r#"
