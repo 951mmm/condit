@@ -53,10 +53,9 @@ impl Ware {
     ) -> bool {
         lazy_static::lazy_static! {
             static ref SET: regex::RegexSet = regex::RegexSet::new(&[
-                r"/profiles/.+*?/follow$",
+                r"/profiles/.+?/follow$",
             ]).unwrap();
         }
-
 
         let path = url.path();
 
