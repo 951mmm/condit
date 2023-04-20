@@ -31,15 +31,50 @@ impl Ware {
             optional,
         })
     }
-    pub async fn optional_res<State: Clone + Send + Sync + 'static>(&self, req: tide::Request<State>, res: tide::Response, next: tide::Next<'_, State>) -> tide::Result {
+
+    /// optional return
+    /// - self.optional is 'true', go ahead if unauth.
+    /// - self.optional is 'false', return StatusCode 'Unauthorize'
+    pub async fn optional_res<State: Clone + Send + Sync + 'static>(
+        &self,
+        req: tide::Request<State>,
+        res: tide::Response,
+        next: tide::Next<'_, State>,
+    ) -> tide::Result {
         match self.optional {
             true => Ok(next.run(req).await),
-            false => Ok(res)
+            false => Ok(res),
         }
     }
+
+    pub fn white_list(
+        &self,
+        url: tide::http::Url
+    ) -> tide::Result<bool> {
+        let set = regex::RegexSet::new(&[
+            r"^/users/login$",
+            r"^/users$",
+            r"^/user$",
+        ])?;
+
+        let path = url.path();
+
+        Ok(set.is_match(path))
+    }
+
+    pub fn optional_list(
+        &self,
+        url: tide::http::Url
+    ) -> tide::Result<bool> {
+        let set = regex::RegexSet::new(&[
+            r"^/profiles/+*(?<!/follow)$",
+        ])?;
+
+        let path = url.path();
+
+        Ok(set.is_match(path))
+    }
 }
-
-
 
 #[tide::utils::async_trait]
 impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
@@ -48,6 +83,11 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
         mut req: tide::Request<State>,
         next: tide::Next<'_, State>,
     ) -> tide::Result {
+
+        if self.white_list(req.url().clone())? {
+            return Ok(next.run(req).await);
+        }
+
         let res_unauth = tide::Response::new(tide::StatusCode::Unauthorized);
 
         if let Some(auth) = req.header("Authorization") {
@@ -61,7 +101,7 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
                 if !value.starts_with("Token") {
                     continue;
                 }
-    
+
                 // slice token out
                 let token = &value["Token ".len()..];
 

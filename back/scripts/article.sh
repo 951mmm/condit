@@ -2,14 +2,17 @@
 base=localhost:2333/api/v1
 # base=https://api.realworld.io/api
 method=$1
-token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6IjkyOTgzZGM2LTRlNWUtNGFhNi1iYzdmLTJmODM4ZGMzOGNmOSIsInVzZXJuYW1lIjoiamFjayIsImV4cCI6MTY4MjE3MDMzNX0.JZFbkf73GLLjff7jb3GJVMJ-aUx40T9c-VoIOkfBmP8"
 
+tokenFile=$PWD/token
+
+if [ ! -e $tokenFile ]; then
+echo "please execute 'touch $PWD/token' and write the token"
+exit 1
+fi
+
+token=`cat $tokenFile`
 
 url="${base}/articles?$2"
-
-# if [ $method = "GET" ]; then
-# url=${base}/user
-# fi
 
 
 curl $cfg \

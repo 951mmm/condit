@@ -1,6 +1,12 @@
 #! /bin/bash
 base=localhost:2333/api/v1
-jsonFile=./login.json
+jsonFile=$PWD/login.json
+
+if [ ! -e $jsonFile ]; then
+echo "please execute 'touch $jsonFile' and write the token"
+exit 1
+fi
+
 compress="jq -c '' <"
 method=$1
 
@@ -10,9 +16,14 @@ if [ $method = "GET" ]; then
 url=${base}/user
 fi
 
-# token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6IjkyOTgzZGM2LTRlNWUtNGFhNi1iYzdmLTJmODM4ZGMzOGNmOSIsInVzZXJuYW1lIjoiamFjayIsImV4cCI6MTY4MjE3MDMzNX0.JZFbkf73GLLjff7jb3GJVMJ-aUx40T9c-VoIOkfBmP8"
+tokenFile=$PWD/token
 
-token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6IjkyOTgzZGM2LTRlNWUtNGFhNi1iYzdmLTJmODM4ZGMzOGNmOSIsInVzZXJuYW1lIjoiamFjayIsImV4cCI6MTY4MjAwODY4NH0.JSaaG_P2fUBx9ibyKGD9wHRVxALtmvepu4jndn4IeVA"
+if [ ! -e $tokenFile ]; then
+echo "please execute 'touch $PWD/token' and write the token"
+exit 1
+fi
+
+token=`cat $tokenFile`
 
 
 curl $cfg\

@@ -1,10 +1,23 @@
 #! /bin/bash
 base=localhost:2333/api/v1
-jsonFile=./register.json
+jsonFile=$PWD/register.json
+
+if [ ! -e $jsonFile ]; then
+echo "please execute 'touch $jsonFile' and write the token"
+exit 1
+fi
+
 compress="jq -c '' <"
 method=POST
 
-token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6IjQzYTZhNWM2LTI0NzUtNDJkZC04NzQ4LWZlZDU1ZGZhZDZjYyIsInVzZXJuYW1lIjoiamFjayIsImV4cCI6MTY4MTgxODM4Nn0.WQBsl2PWXnu9S-5K3AxEQPalYOlSijreQW9OFqhD_nI
+tokenFile=$PWD/token
+
+if [ ! -e $tokenFile ]; then
+echo "please execute 'touch $PWD/token' and write the token"
+exit 1
+fi
+
+token=`cat $tokenFile`
 
 
 curl $cfg\

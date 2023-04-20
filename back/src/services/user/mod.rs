@@ -1,7 +1,9 @@
+// ANCHOR mod
 pub mod get;
 pub mod login;
 pub mod post;
 
+// ANCHOR pub obj
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
 pub struct ResAuthUser {
     pub username: String,
@@ -29,12 +31,14 @@ pub struct Errors {
     pub email_or_password: Option<Vec<String>>,
 }
 
-// utils function
+// ANCHOR utils
 fn gen_token(username: String, id: uuid::Uuid) -> tide::Result<String> {
     let jwt_key = std::env::var("JWT_KEY")?;
 
+    let token_exp_duration = std::env::var("TOKEN_EXP_DURATION")?;
+
     let exp = chrono::Utc::now()
-        .checked_add_signed(chrono::Duration::seconds(10))
+        .checked_add_signed(chrono::Duration::days(token_exp_duration.parse()?))
         .unwrap_or(chrono::Utc::now())
         .timestamp();
 

@@ -1,5 +1,7 @@
+// ANCHOR mod
 pub mod list;
 
+// ANCHOR pub obj
 #[derive(serde::Deserialize, serde::Serialize, Debug,  Default)]
 pub struct ResArticle {
     pub slug: String,

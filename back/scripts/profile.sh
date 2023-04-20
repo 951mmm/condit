@@ -1,6 +1,6 @@
 #! /bin/bash
 base=localhost:2333/api/v1
-jsonFile=./login.json
+jsonFile=$PWD/login.json
 compress="jq -c '' <"
 method=$1
 
@@ -10,7 +10,14 @@ if [ $method != "GET" ]; then
 url=${base}/profiles/$2/follow
 fi
 
-token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6IjkyOTgzZGM2LTRlNWUtNGFhNi1iYzdmLTJmODM4ZGMzOGNmOSIsInVzZXJuYW1lIjoiamFjayIsImV4cCI6MTY4MjAwOTEzOH0.LWcdhjuqHIAhQY8SpL0cwzyhQTJQEsN2j3hSAD_PYUM"
+tokenFile=$PWD/token
+
+if [ ! -e $tokenFile ]; then
+echo "please execute 'touch $PWD/token' and write the token"
+exit 1
+fi
+
+token=`cat $tokenFile`
 
 
 curl $cfg \
