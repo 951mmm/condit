@@ -35,13 +35,23 @@ pub struct Errors {
 fn gen_token(username: String, id: uuid::Uuid) -> tide::Result<String> {
     let jwt_key = std::env::var("JWT_KEY")?;
 
-    let token_exp_duration = std::env::var("TOKEN_EXP_DURATION")?;
+    
+    let exp = if cfg!(feature = "token_debug") {
+        chrono::Utc::now()
+        .checked_add_signed(chrono::Duration::seconds(1))
+        .unwrap_or(chrono::Utc::now())
+        .timestamp()
+    }
+    else {
+        let token_exp_duration = std::env::var("TOKEN_EXP_DURATION")?;
 
-    let exp = chrono::Utc::now()
+        chrono::Utc::now()
         .checked_add_signed(chrono::Duration::days(token_exp_duration.parse()?))
         .unwrap_or(chrono::Utc::now())
-        .timestamp();
+        .timestamp()
+    };
 
+    #[cfg(feature = "token_debug")]
     tide::log::info!("fresh token with exp: {}", exp);
 
     let jwt_payload = crate::middlewares::jwt_token::JWTPayload {

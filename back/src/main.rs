@@ -54,8 +54,9 @@ async fn server() -> tide::Result<tide::Server<State>> {
 
     // middlewares
     let jwt_key = std::env::var("JWT_KEY")?;
-    let jwt_token_middleware = middlewares::jwt_token::Ware::new(jwt_key.clone(), false)?;
-    let optional_jwt_token_middleware = middlewares::jwt_token::Ware::new(jwt_key, true)?;
+    let jwt_token_middleware = middlewares::jwt_token::Ware::new(jwt_key.clone())?;
+
+    app.with(jwt_token_middleware);
 
     app.at("/").serve_file(index_path)?;
 
@@ -77,12 +78,10 @@ async fn server() -> tide::Result<tide::Server<State>> {
 
         router
             .at("/user")
-            .with(jwt_token_middleware.clone())
             .get(services::user::get::handler);
 
         router
             .at("/profiles/:username")
-            .with(optional_jwt_token_middleware.clone())
             .nest({
                 let mut router = tide::with_state(state.clone());
 
@@ -102,7 +101,6 @@ async fn server() -> tide::Result<tide::Server<State>> {
 
             router
                 .at("/")
-                .with(optional_jwt_token_middleware)
                 .get(services::article::list::handler);
 
             router

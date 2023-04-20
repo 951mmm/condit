@@ -19,60 +19,51 @@ pub fn crypt<Payload: serde::Serialize + serde::de::DeserializeOwned + Send + Sy
 #[derive(Clone)]
 pub struct Ware {
     pub base64_key: jsonwebtoken::DecodingKey,
-    pub optional: bool,
 }
 
 impl Ware {
-    pub fn new(key: String, optional: bool) -> tide::Result<Self> {
+    pub fn new(key: String) -> tide::Result<Self> {
         let key = jsonwebtoken::DecodingKey::from_secret(&key.as_bytes());
         tide::log::info!("generate decodeing key");
         Ok(Self {
             base64_key: key,
-            optional,
         })
-    }
-
-    /// optional return
-    /// - self.optional is 'true', go ahead if unauth.
-    /// - self.optional is 'false', return StatusCode 'Unauthorize'
-    pub async fn optional_res<State: Clone + Send + Sync + 'static>(
-        &self,
-        req: tide::Request<State>,
-        res: tide::Response,
-        next: tide::Next<'_, State>,
-    ) -> tide::Result {
-        match self.optional {
-            true => Ok(next.run(req).await),
-            false => Ok(res),
-        }
     }
 
     pub fn white_list(
         &self,
         url: tide::http::Url
-    ) -> tide::Result<bool> {
-        let set = regex::RegexSet::new(&[
-            r"^/users/login$",
-            r"^/users$",
-            r"^/user$",
-        ])?;
+    ) -> bool {
+        lazy_static::lazy_static! {
+            static ref SET: regex::RegexSet = regex::RegexSet::new(&[
+                r"/users/login$",
+                r"/users$",
+                r"/user$",
+            ]).unwrap();
+        }
 
         let path = url.path();
 
-        Ok(set.is_match(path))
+        SET.is_match(path)
     }
 
     pub fn optional_list(
         &self,
         url: tide::http::Url
-    ) -> tide::Result<bool> {
-        let set = regex::RegexSet::new(&[
-            r"^/profiles/+*(?<!/follow)$",
-        ])?;
+    ) -> bool {
+        lazy_static::lazy_static! {
+            static ref SET: regex::RegexSet = regex::RegexSet::new(&[
+                r"/profiles/.+*?/follow$",
+            ]).unwrap();
+        }
+
 
         let path = url.path();
 
-        Ok(set.is_match(path))
+        // there is no look ahead in '[rust::regex]'
+        // should inverse the result to implement 
+        // 'look back not match' 
+        !SET.is_match(path)
     }
 }
 
@@ -84,16 +75,16 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
         next: tide::Next<'_, State>,
     ) -> tide::Result {
 
-        if self.white_list(req.url().clone())? {
+        if self.white_list(req.url().clone()) {
             return Ok(next.run(req).await);
         }
+
+        let is_optional = self.optional_list(req.url().clone());
 
         let res_unauth = tide::Response::new(tide::StatusCode::Unauthorized);
 
         if let Some(auth) = req.header("Authorization") {
             let values: Vec<_> = auth.into_iter().collect();
-
-            tide::log::info!("token content: {:#?}", values);
 
             // search "Token ..."
             for value in values {
@@ -105,6 +96,7 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
                 // slice token out
                 let token = &value["Token ".len()..];
 
+                #[cfg(feature = "token_debug")]
                 tide::log::info!("token is {}", token);
 
                 // decrypt payload fron token
@@ -114,7 +106,10 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
                     &jsonwebtoken::Validation::default(),
                 ) {
                     Ok(payload) => payload,
-                    Err(_) => return self.optional_res(req, res_unauth, next).await,
+                    Err(_) => match is_optional {
+                        true => return Ok(next.run(req).await),
+                        false => return Ok(res_unauth),
+                    }
                 };
 
                 // get expire of claims
@@ -130,6 +125,7 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
                     return Ok(next.run(req).await);
                 }
 
+                #[cfg(feature = "token_debug")]
                 tide::log::info!("current: {}, exp: {}", current_time, exp);
 
                 // whether expired
@@ -137,11 +133,17 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
                     req.set_ext(claims);
                     return Ok(next.run(req).await);
                 } else {
-                    return self.optional_res(req, res_unauth, next).await;
+                    match is_optional {
+                        true => return Ok(next.run(req).await),
+                        false => return Ok(res_unauth),
+                    }
                 }
             }
         }
 
-        self.optional_res(req, res_unauth, next).await
+        match is_optional {
+            true => return Ok(next.run(req).await),
+            false => return Ok(res_unauth),
+        }
     }
 }
