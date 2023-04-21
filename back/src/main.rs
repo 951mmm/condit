@@ -76,32 +76,28 @@ async fn server() -> tide::Result<tide::Server<State>> {
             .with(services::user::post::error_handler)
             .post(services::user::post::handler);
 
-        router
-            .at("/user")
-            .get(services::user::get::handler);
+        router.at("/user").get(services::user::get::handler);
 
-        router
-            .at("/profiles/:username")
-            .nest({
-                let mut router = tide::with_state(state.clone());
+        router.at("/profiles/:username").nest({
+            let mut router = tide::with_state(state.clone());
 
-                router.at("/").get(services::profile::get::handler);
+            router.at("/").get(services::profile::get::handler);
 
-                router.at("/follow").post(services::profile::post::handler);
+            router.at("/follow").post(services::profile::post::handler);
 
-                router
-                    .at("/follow")
-                    .delete(services::profile::delete::handler);
+            router
+                .at("/follow")
+                .delete(services::profile::delete::handler);
 
-                router
-            });
+            router
+        });
 
         router.at("/articles").nest({
             let mut router = tide::with_state(state.clone());
 
-            router
-                .at("/")
-                .get(services::article::list::handler);
+            router.at("/").get(services::article::list::handler);
+
+            router.at("/feed").get(services::article::feed::handler);
 
             router
         });

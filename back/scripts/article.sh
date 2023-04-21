@@ -2,6 +2,7 @@
 base=localhost:2333/api/v1
 # base=https://api.realworld.io/api
 method=$1
+func=$2
 
 tokenFile=$PWD/token
 
@@ -14,6 +15,9 @@ token=`cat $tokenFile`
 
 url="${base}/articles?$2"
 
+if [ $func = "feed" ]; then
+url="${base}/articles/${func}"
+fi
 
 curl $cfg \
     $url \

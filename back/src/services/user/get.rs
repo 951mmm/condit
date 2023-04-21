@@ -4,16 +4,18 @@
 
 use std::str::FromStr;
 
+use super::super::*;
 use super::*;
 
-use super::super::*;
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
 pub struct Res {
     user: ResAuthUser,
 }
 
 pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
-    let payload = req.ext::<crate::middlewares::jwt_token::JWTPayload>().unwrap();
+    let payload = req
+        .ext::<crate::middlewares::jwt_token::JWTPayload>()
+        .unwrap();
 
     let crate::middlewares::jwt_token::JWTPayload { id, .. } = payload;
 
@@ -47,19 +49,17 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::{State, services::user::ResAuthUser};
+    use crate::{services::user::ResAuthUser, State};
     use tide_testing::TideTestingExt;
 
     use super::Res;
 
-
-
-    pub async fn get_token_string(
-        app: tide::Server<State>,
-    ) -> String {
+    pub async fn get_token_string(app: tide::Server<State>) -> String {
         let mut res = app.get("/api/v1/user").await.unwrap();
-        let Res { user: ResAuthUser { token, ..}} = res.body_json::<Res>().await.unwrap();
-        
+        let Res {
+            user: ResAuthUser { token, .. },
+        } = res.body_json::<Res>().await.unwrap();
+
         token
     }
 }
