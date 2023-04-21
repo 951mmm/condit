@@ -1,13 +1,13 @@
 // ANCHOR dep
-use std::str::FromStr;
-
-use super::string_to_uuid;
+use super::*;
+use crate::utils::*;
 
 // ANCHOR mod
 pub mod feed;
-pub mod list;
 pub mod get;
+pub mod list;
 pub mod post;
+pub mod put;
 
 // ANCHOR pub obj
 #[derive(serde::Deserialize, serde::Serialize, Debug, Default)]
@@ -37,6 +37,26 @@ pub struct ResArticle {
     pub favorites_count: i64,
 
     pub author: crate::services::profile::ResProfile,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct ReqWrite {
+    pub article: ReqWriteArticle,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct ReqWriteArticle {
+    #[serde(default)]
+    pub title: String,
+
+    #[serde(default)]
+    pub description: String,
+
+    #[serde(default)]
+    pub body: String,
+
+    #[serde(rename = "tagList")]
+    pub tag_list: Option<Vec<String>>,
 }
 
 // ANCHOR utils
@@ -83,7 +103,7 @@ pub async fn get_favorited(
 pub async fn get_res_article(
     article_entity: crate::applications::article::Entity,
     payload: Option<&crate::middlewares::jwt_token::JWTPayload>,
-    db_pool: sqlx::PgPool
+    db_pool: sqlx::PgPool,
 ) -> tide::Result<ResArticle> {
     let crate::applications::article::Entity {
         author_id,
@@ -100,8 +120,7 @@ pub async fn get_res_article(
     let favorited = get_favorited(payload, db_pool.clone(), author_id).await?;
 
     let favorites_count =
-        crate::applications::favorite::get_favorites_count(db_pool.clone(), id)
-            .await?;
+        crate::applications::favorite::get_favorites_count(db_pool.clone(), id).await?;
 
     let tag_list = crate::applications::tag::get(db_pool, id).await?;
 
@@ -129,10 +148,52 @@ pub async fn get_res_articles(
     let mut res_articles = vec![];
 
     for article_entity in article_entities.into_iter() {
-        let res_article=get_res_article(article_entity, payload, db_pool.clone()).await?;
+        let res_article = get_res_article(article_entity, payload, db_pool.clone()).await?;
 
         res_articles.push(res_article);
     }
 
     Ok(res_articles)
+}
+
+pub fn write_error_handler<'a>(
+    mut req: tide::Request<crate::State>,
+    next: tide::Next<'a, crate::State>,
+) -> std::pin::Pin<Box<dyn std::future::Future<Output = tide::Result> + Send + 'a>> {
+    Box::pin(async {
+        let req_body = req.body_json::<ReqWrite>().await?;
+
+        let ReqWrite {
+            article: req_article,
+        } = req_body.clone();
+
+        let ReqWriteArticle {
+            title,
+            description,
+            body,
+            ..
+        } = req_article.clone();
+
+        let res = tide::Response::new(tide::StatusCode::UnprocessableEntity);
+
+        let mut error_body = ErrorBody::default();
+
+        if be_empty_string(&title) {
+            error_body.errors.title = wrap_err_str("should not be blank");
+            return set_error(res, error_body);
+        }
+
+        if be_empty_string(&description) {
+            error_body.errors.description = wrap_err_str("should not be blank");
+            return set_error(res, error_body);
+        }
+
+        if be_empty_string(&body) {
+            error_body.errors.body = wrap_err_str("should not be blank");
+            return set_error(res, error_body);
+        }
+
+        req.set_ext(req_article);
+        Ok(next.run(req).await)
+    })
 }

@@ -1,6 +1,6 @@
-use crate::{applications::user::{have_with_email, have_with_username}, services::response_ok_and_json};
-
+use super::super::*;
 use super::*;
+use crate::utils::*;
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct Req {
@@ -9,10 +9,13 @@ pub struct Req {
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct ReqUser {
+    #[serde(default)]
     pub username: String,
 
+    #[serde(default)]
     pub email: String,
 
+    #[serde(default)]
     pub password: String,
 
     pub image: Option<String>,
@@ -63,12 +66,12 @@ pub fn error_handler<'a>(
 
         let mut have_errors = false;
 
-        if have_with_username(db_pool.clone(), username.clone()).await? {
+        if crate::applications::user::have_with_username(db_pool.clone(), username.clone()).await? {
             error_body.errors.username = wrap_err_str("has been already taken");
             have_errors = true;
         }
 
-        if have_with_email(db_pool, email.clone()).await? {
+        if crate::applications::user::have_with_email(db_pool, email.clone()).await? {
             error_body.errors.email = wrap_err_str("has been already taken");
             have_errors = true;
         }

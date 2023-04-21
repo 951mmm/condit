@@ -1,7 +1,11 @@
+// ANCHOR dep
+use super::*;
+
 // ANCHOR mod
 pub mod get;
 pub mod login;
 pub mod post;
+pub mod put;
 
 // ANCHOR pub obj
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
@@ -17,38 +21,22 @@ pub struct ResAuthUser {
     pub image: String,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Default)]
-pub struct ErrorBody {
-    pub errors: Errors,
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Debug, Default)]
-pub struct Errors {
-    pub username: Option<Vec<String>>,
-    pub email: Option<Vec<String>>,
-    pub password: Option<Vec<String>>,
-    #[serde(rename = "email or password")]
-    pub email_or_password: Option<Vec<String>>,
-}
-
 // ANCHOR utils
 fn gen_token(username: String, id: uuid::Uuid) -> tide::Result<String> {
     let jwt_key = std::env::var("JWT_KEY")?;
 
-    
     let exp = if cfg!(feature = "token_debug") {
         chrono::Utc::now()
-        .checked_add_signed(chrono::Duration::seconds(1))
-        .unwrap_or(chrono::Utc::now())
-        .timestamp()
-    }
-    else {
+            .checked_add_signed(chrono::Duration::seconds(1))
+            .unwrap_or(chrono::Utc::now())
+            .timestamp()
+    } else {
         let token_exp_duration = std::env::var("TOKEN_EXP_DURATION")?;
 
         chrono::Utc::now()
-        .checked_add_signed(chrono::Duration::days(token_exp_duration.parse()?))
-        .unwrap_or(chrono::Utc::now())
-        .timestamp()
+            .checked_add_signed(chrono::Duration::days(token_exp_duration.parse()?))
+            .unwrap_or(chrono::Utc::now())
+            .timestamp()
     };
 
     #[cfg(feature = "token_debug")]
@@ -64,18 +52,6 @@ fn gen_token(username: String, id: uuid::Uuid) -> tide::Result<String> {
     Ok(token)
 }
 
-fn set_error(mut res: tide::Response, error_body: ErrorBody) -> tide::Result {
-    res.set_body(tide::Body::from_json(&error_body)?);
-    Ok(res)
-}
-
-pub fn wrap_err_str(str: &str) -> Option<Vec<String>> {
-    Some(vec![String::from(str)])
-}
-
-fn be_empty_string(str: &String) -> bool {
-    str.trim().is_empty()
-}
 
 #[cfg(test)]
 pub mod tests {

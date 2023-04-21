@@ -30,9 +30,20 @@ pub async fn create(db_pool: sqlx::PgPool, tag_list: Vec<String>, article_id: uu
 
     let sql_string = format!("{} {};", sql_string, insert_values.join(","));
 
-    tide::log::info!("sql string is: {}",  sql_string);
-
     match sqlx::query(&sql_string).execute(&db_pool).await {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.into())
+    }
+}
+
+pub async fn delete(db_pool: sqlx::PgPool, article_id: uuid::Uuid) -> tide::Result<()> {
+    match sqlx::query!(
+        r#"
+        delete from tag
+        where article_id=$1
+        "#,
+        article_id
+    ).execute(&db_pool).await {
         Ok(_) => Ok(()),
         Err(err) => Err(err.into())
     }

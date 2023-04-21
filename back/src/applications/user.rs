@@ -1,4 +1,5 @@
-#[derive(Default)]
+use super::*;
+#[derive(Default, sqlx::FromRow)]
 pub struct Entity {
     pub id: uuid::Uuid,
     pub username: String,
@@ -92,12 +93,51 @@ pub async fn get(db_pool: sqlx::PgPool, id: uuid::Uuid) -> tide::Result<Entity> 
     let row = sqlx::query_as!(
         Entity,
         r#"
-        SELECT * FROM CONDITUSER WHERE ID=$1;
+        select * from condituser where id=$1;
         "#,
         id
     )
     .fetch_one(&db_pool)
     .await?;
+
+    Ok(row)
+}
+
+pub async fn update(
+    db_pool: sqlx::PgPool,
+    req_user: crate::services::user::put::ReqUser,
+    id: uuid::Uuid,
+) -> tide::Result<Entity> {
+    let crate::services::user::put::ReqUser {
+        username,
+        bio,
+        password,
+        image,
+        email,
+    } = req_user;
+
+    let params = Joiner::build(",", be_empty_string)
+        .join(empty_or_expr("bio=", &bio))
+        .join(empty_or_expr("password=", &password))
+        .join(empty_or_expr("image=", &image))
+        .join(empty_or_expr("email=", &email))
+        .join(empty_or_expr("username=", &username))
+        .builder();
+
+    let sql_string = format!(
+        r#"
+        update condituser
+        set {}
+        where id='{}'
+        returning *;
+        "#,
+        params,
+        id.to_string()
+    );
+
+    let row = sqlx::query_as(sql_string.as_str())
+        .fetch_one(&db_pool)
+        .await?;
 
     Ok(row)
 }

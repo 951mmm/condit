@@ -1,6 +1,6 @@
 #! /bin/bash
 base=localhost:2333/api/v1
-jsonFile=$PWD/login.json
+jsonFile=$PWD/user.json
 
 if [ ! -e $jsonFile ]; then
 echo "please execute 'touch $jsonFile' and write the token"
@@ -12,7 +12,7 @@ method=$1
 
 url="${base}/users/login"
 
-if [ $method = "GET" ]; then
+if [ ! $method = "POST" ]; then
 url=${base}/user
 fi
 
@@ -27,7 +27,7 @@ token=`cat $tokenFile`
 
 
 curl $cfg\
-    -d $(eval $compress $jsonFile) \
+    -d "$(eval $compress $jsonFile)" \
     $url \
     -H 'Authorization:Token '${token}'' \
     -H "Authorization:Fxxk" \

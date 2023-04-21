@@ -6,10 +6,12 @@ pub struct Res {
     pub article: ResArticle,
 }
 
-pub async fn handler(mut req: tide::Request<crate::State>) -> tide::Result {
-    let ReqWrite {
-        article: req_article,
-    } = req.body_json::<ReqWrite>().await?;
+pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
+    let slug = req.param("slug")?;
+
+    let article_id = String::from(slug);
+
+    let req_article = req.ext::<ReqWriteArticle>().unwrap().clone();
 
     let ReqWriteArticle { tag_list, .. } = req_article.clone();
 
@@ -17,22 +19,23 @@ pub async fn handler(mut req: tide::Request<crate::State>) -> tide::Result {
         .ext::<crate::middlewares::jwt_token::JWTPayload>()
         .unwrap();
 
-    let crate::middlewares::jwt_token::JWTPayload { id: author_id, .. } = payload;
-
     let db_pool = req.state().postgres_pool.clone();
 
-    let article_entity = crate::applications::article::create(
+    let article_entity = crate::applications::article::update(
         db_pool.clone(),
         req_article,
-        string_to_uuid(author_id)?,
+        string_to_uuid(&article_id)?,
     )
     .await?;
 
     let crate::applications::article::Entity { id: article_id, .. } = article_entity;
 
+    // TODO diff update
+    crate::applications::tag::delete(db_pool.clone(), article_id).await?;
+
     match tag_list {
         Some(tag_list) => {
-            crate::applications::tag::create(db_pool.clone(), tag_list, article_id).await?
+            crate::applications::tag::create(db_pool.clone(), tag_list, article_id).await?;
         }
         None => {}
     };

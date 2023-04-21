@@ -3,6 +3,7 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 mod applications;
 mod middlewares;
 mod services;
+mod utils;
 
 #[derive(Clone)]
 pub struct State {
@@ -80,6 +81,11 @@ async fn server() -> tide::Result<tide::Server<State>> {
             .with(jwt_token_middleware.clone())
             .get(services::user::get::handler);
 
+        router
+            .at("/user")
+            .with(jwt_token_middleware.clone())
+            .put(services::user::put::handler);
+
         router.at("/profiles/:username").nest({
             let mut router = tide::with_state(state.clone());
 
@@ -118,8 +124,15 @@ async fn server() -> tide::Result<tide::Server<State>> {
 
             router
                 .at("/")
-                .with(jwt_token_middleware)
+                .with(jwt_token_middleware.clone())
+                .with(services::article::write_error_handler)
                 .post(services::article::post::handler);
+
+            router
+                .at("/:slug")
+                .with(jwt_token_middleware)
+                .with(services::article::write_error_handler)
+                .put(services::article::put::handler);
 
             router
         });

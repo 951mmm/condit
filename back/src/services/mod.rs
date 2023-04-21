@@ -8,6 +8,27 @@ pub mod user;
 pub mod profile;
 pub mod article;
 
+// ANCHOR pub obj
+#[derive(serde::Deserialize, serde::Serialize, Debug, Default)]
+pub struct ErrorBody {
+    pub errors: Errors,
+}
+#[derive(serde::Deserialize, serde::Serialize, Debug, Default)]
+pub struct Errors {
+    // user
+    pub username: Option<Vec<String>>,
+    pub email: Option<Vec<String>>,
+    pub password: Option<Vec<String>>,
+    #[serde(rename = "email or password")]
+    pub email_or_password: Option<Vec<String>>,
+
+    // article
+    pub title: Option<Vec<String>>,
+    pub description: Option<Vec<String>>,
+    pub body: Option<Vec<String>>,
+}
+
+
 // ANCHOR utils
 pub fn response_ok_and_json<Res>(res_json: Res) -> tide::Result
 where Res: Serialize {

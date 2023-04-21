@@ -1,6 +1,10 @@
 //! there should be a func to join table article and user
 //! there should be a func to join favorited and favoritedCunt
 
+use std::fmt::format;
+
+use super::*;
+
 #[derive(serde::Deserialize, serde::Serialize, Debug, Default, sqlx::FromRow)]
 pub struct Entity {
     pub id: uuid::Uuid,
@@ -121,7 +125,7 @@ pub async fn get(db_pool: sqlx::PgPool, id: uuid::Uuid) -> tide::Result<Entity> 
 
 pub async fn create(
     db_pool: sqlx::PgPool,
-    req_article: crate::services::article::post::ReqArticle,
+    req_article: crate::services::article::ReqWriteArticle,
     author_id: uuid::Uuid,
 ) -> tide::Result<Entity> {
     let row = sqlx::query_as!(
@@ -137,6 +141,41 @@ pub async fn create(
     )
     .fetch_one(&db_pool)
     .await?;
+
+    Ok(row)
+}
+
+pub async fn update(
+    db_pool: sqlx::PgPool,
+    req_article: crate::services::article::ReqWriteArticle,
+    author_id: uuid::Uuid,
+) -> tide::Result<Entity> {
+    let crate::services::article::ReqWriteArticle {
+        title,
+        description,
+        body,
+        ..
+    } = req_article;
+
+    let params = Joiner::build(",", be_empty_string)
+        .join(empty_or_expr("title=", &title))
+        .join(empty_or_expr("description=", &description))
+        .join(empty_or_expr("body=", &body))
+        .builder();
+
+    let sql_string = format!(
+        r#"
+        update article
+        set {}
+        where id='{}'
+        returning *;
+        "#,
+        params, author_id
+    );
+
+    let row = sqlx::query_as(&sql_string.as_str())
+        .fetch_one(&db_pool)
+        .await?;
 
     Ok(row)
 }
