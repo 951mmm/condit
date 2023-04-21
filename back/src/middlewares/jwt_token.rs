@@ -19,52 +19,19 @@ pub fn crypt<Payload: serde::Serialize + serde::de::DeserializeOwned + Send + Sy
 #[derive(Clone)]
 pub struct Ware {
     pub base64_key: jsonwebtoken::DecodingKey,
+    pub is_optional: bool
 }
 
 impl Ware {
-    pub fn new(key: String) -> tide::Result<Self> {
+    pub fn new(key: String, is_optional: bool) -> tide::Result<Self> {
         let key = jsonwebtoken::DecodingKey::from_secret(&key.as_bytes());
         tide::log::info!("generate decodeing key");
         Ok(Self {
             base64_key: key,
+            is_optional
         })
     }
 
-    pub fn white_list(
-        &self,
-        url: tide::http::Url
-    ) -> bool {
-        lazy_static::lazy_static! {
-            static ref SET: regex::RegexSet = regex::RegexSet::new(&[
-                r"/users/login$",
-                r"/users$",
-                r"/user$",
-            ]).unwrap();
-        }
-
-        let path = url.path();
-
-        SET.is_match(path)
-    }
-
-    pub fn optional_list(
-        &self,
-        url: tide::http::Url
-    ) -> bool {
-        lazy_static::lazy_static! {
-            static ref SET: regex::RegexSet = regex::RegexSet::new(&[
-                r"/profiles/.+?/follow$",
-                r"/articles.*?/.+$"
-            ]).unwrap();
-        }
-
-        let path = url.path();
-
-        // there is no look ahead in '[rust::regex]'
-        // should inverse the result to implement 
-        // 'look back not match' 
-        !SET.is_match(path)
-    }
 }
 
 #[tide::utils::async_trait]
@@ -74,12 +41,6 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
         mut req: tide::Request<State>,
         next: tide::Next<'_, State>,
     ) -> tide::Result {
-
-        if self.white_list(req.url().clone()) {
-            return Ok(next.run(req).await);
-        }
-
-        let is_optional = self.optional_list(req.url().clone());
 
         let res_unauth = tide::Response::new(tide::StatusCode::Unauthorized);
 
@@ -106,7 +67,7 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
                     &jsonwebtoken::Validation::default(),
                 ) {
                     Ok(payload) => payload,
-                    Err(_) => match is_optional {
+                    Err(_) => match self.is_optional {
                         true => return Ok(next.run(req).await),
                         false => return Ok(res_unauth),
                     }
@@ -133,7 +94,7 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
                     req.set_ext(claims);
                     return Ok(next.run(req).await);
                 } else {
-                    match is_optional {
+                    match self.is_optional {
                         true => return Ok(next.run(req).await),
                         false => return Ok(res_unauth),
                     }
@@ -141,7 +102,7 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
             }
         }
 
-        match is_optional {
+        match self.is_optional {
             true => return Ok(next.run(req).await),
             false => return Ok(res_unauth),
         }

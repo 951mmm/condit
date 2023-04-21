@@ -32,4 +32,3 @@ curl $cfg\
     -H 'Authorization:Token '${token}'' \
     -H "Authorization:Fxxk" \
     -X $method 
-

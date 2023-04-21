@@ -11,9 +11,9 @@ pub struct Entity {
 
     pub body: String,
 
-    pub created_at: chrono::NaiveDate,
+    pub created_at: chrono::NaiveDateTime,
 
-    pub updated_at: chrono::NaiveDate,
+    pub updated_at: chrono::NaiveDateTime,
 
     pub author_id: uuid::Uuid,
 }
@@ -80,7 +80,8 @@ pub async fn list_feed(
     db_pool: sqlx::PgPool,
     follower_id: uuid::Uuid,
 ) -> tide::Result<Vec<Entity>> {
-    let sql_string = format!(
+    let rows = sqlx::query_as!(
+        Entity,
         r#"
         select 
             id,
@@ -93,12 +94,49 @@ pub async fn list_feed(
         from article
         inner join favoriting
         on favoriting.article_id=article.id
-        and favoriting.follower_id='{}'
+        and favoriting.follower_id=$1
         "#,
         follower_id
-    );
-
-    let rows = sqlx::query_as(&sql_string).fetch_all(&db_pool).await?;
+    )
+    .fetch_all(&db_pool)
+    .await?;
 
     Ok(rows)
+}
+
+pub async fn get(db_pool: sqlx::PgPool, id: uuid::Uuid) -> tide::Result<Entity> {
+    let row = sqlx::query_as!(
+        Entity,
+        r#"
+        select * from article
+        where article.id=$1;
+        "#,
+        id
+    )
+    .fetch_one(&db_pool)
+    .await?;
+
+    Ok(row)
+}
+
+pub async fn create(
+    db_pool: sqlx::PgPool,
+    req_article: crate::services::article::post::ReqArticle,
+    author_id: uuid::Uuid,
+) -> tide::Result<Entity> {
+    let row = sqlx::query_as!(
+        Entity,
+        r#"
+        insert into article (title, description, body, author_id)
+        values ($1, $2, $3, $4) returning *;
+        "#,
+        req_article.title,
+        req_article.description,
+        req_article.body,
+        author_id
+    )
+    .fetch_one(&db_pool)
+    .await?;
+
+    Ok(row)
 }

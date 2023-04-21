@@ -68,20 +68,12 @@ pub mod post {
         let db_pool = req.state().postgres_pool.clone();
 
         // build follow relationship
-        match crate::applications::profile::follow(
+        crate::applications::profile::follow(
             db_pool.clone(),
             follower.clone(),
             followee.clone(),
         )
-        .await
-        {
-            Ok(_) => {}
-            Err(err) => {
-                let mut res = tide::Response::new(tide::StatusCode::InternalServerError);
-                res.set_error(err);
-                return Ok(res);
-            }
-        };
+        .await?;
 
         // set res body with 'profile'
         let profile = crate::applications::profile::get(db_pool, follower, followee).await?;
@@ -98,20 +90,12 @@ pub mod delete {
 
         let db_pool = req.state().postgres_pool.clone();
 
-        match crate::applications::profile::unfollow(
+        crate::applications::profile::unfollow(
             db_pool.clone(),
             follower.clone(),
             followee.clone(),
         )
-        .await
-        {
-            Ok(_) => {}
-            Err(err) => {
-                let mut res = tide::Response::new(tide::StatusCode::InternalServerError);
-                res.set_error(err);
-                return Ok(res);
-            }
-        }
+        .await?;
 
         let profile =
             crate::applications::profile::get(db_pool, follower.clone(), followee.clone()).await?;

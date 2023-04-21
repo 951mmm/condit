@@ -15,13 +15,25 @@ token=`cat $tokenFile`
 
 url="${base}/articles?$2"
 
-if [ $func = "feed" ]; then
-url="${base}/articles/${func}"
-fi
+# if [ $func = "feed" ]; then
+# url="${base}/articles/${func}"
+# fi
 
-curl $cfg \
+curlCli="curl $cfg \
     $url \
     -H 'Authorization:Token '${token}'' \
     -H "Authorization:Fxxk" \
-    -X $method 
+    -X $method"
 
+compress="jq -c '' <"
+jsonFile=$PWD/article.json
+json=$(eval $compress $jsonFile)
+url=${base}/articles
+
+if [ $method = "POST" ]; then
+curl $cfg \
+    $url \
+    -H 'Authorization:Token '${token}'' \
+    -X $method \
+    -d "$json"
+fi

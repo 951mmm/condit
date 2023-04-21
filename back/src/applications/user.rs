@@ -26,7 +26,7 @@ pub async fn create(
             Entity,
             r#"
             INSERT INTO CONDITUSER (USERNAME, EMAIL, PASSWORD, IMAGE) VALUES
-            ($1, $2, $3, $4) RETURNING *
+            ($1, $2, $3, $4) RETURNING *;
             "#,
             user.username,
             user.email,
@@ -43,7 +43,7 @@ pub async fn create(
 pub async fn have_with_email(db_pool: sqlx::PgPool, email: String) -> tide::Result<bool> {
     match sqlx::query!(
         r#"
-        select * from condituser where email=$1    
+        select * from condituser where email=$1;
         "#,
         email
     )
@@ -58,7 +58,7 @@ pub async fn have_with_email(db_pool: sqlx::PgPool, email: String) -> tide::Resu
 pub async fn have_with_username(db_pool: sqlx::PgPool, username: String) -> tide::Result<bool> {
     match sqlx::query!(
         r#"
-        select * from condituser where username=$1
+        select * from condituser where username=$1;
         "#,
         username
     )
@@ -77,7 +77,7 @@ pub async fn have(
     let row = sqlx::query_as!(
         Entity,
         r#"
-        SELECT * FROM CONDITUSER WHERE EMAIL=$1 AND PASSWORD=$2
+        SELECT * FROM CONDITUSER WHERE EMAIL=$1 AND PASSWORD=$2;
         "#,
         user.email,
         user.password
@@ -92,7 +92,7 @@ pub async fn get(db_pool: sqlx::PgPool, id: uuid::Uuid) -> tide::Result<Entity> 
     let row = sqlx::query_as!(
         Entity,
         r#"
-        SELECT * FROM CONDITUSER WHERE ID=$1
+        SELECT * FROM CONDITUSER WHERE ID=$1;
         "#,
         id
     )
@@ -105,7 +105,7 @@ pub async fn get(db_pool: sqlx::PgPool, id: uuid::Uuid) -> tide::Result<Entity> 
 #[cfg(test)]
 pub mod tests {
     pub async fn delete(db_pool: sqlx::PgPool, email: String) -> bool {
-        match sqlx::query!(r#"DELETE FROM CONDITUSER WHERE EMAIL=$1"#, email)
+        match sqlx::query!(r#"DELETE FROM CONDITUSER WHERE EMAIL=$1;"#, email)
             .execute(&db_pool)
             .await
         {

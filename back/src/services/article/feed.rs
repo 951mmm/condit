@@ -23,7 +23,7 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
 
     let article_entities = crate::applications::article::list_feed(
         db_pool.clone(),
-        uuid::Uuid::from_str(follower_id.as_str())?,
+        string_to_uuid(follower_id)?,
     )
     .await?;
 

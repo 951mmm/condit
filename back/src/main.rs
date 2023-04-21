@@ -54,9 +54,8 @@ async fn server() -> tide::Result<tide::Server<State>> {
 
     // middlewares
     let jwt_key = std::env::var("JWT_KEY")?;
-    let jwt_token_middleware = middlewares::jwt_token::Ware::new(jwt_key.clone())?;
-
-    app.with(jwt_token_middleware);
+    let jwt_token_middleware = middlewares::jwt_token::Ware::new(jwt_key.clone(), false)?;
+    let optional_jwt_token_middleware = middlewares::jwt_token::Ware::new(jwt_key, true)?;
 
     app.at("/").serve_file(index_path)?;
 
@@ -76,17 +75,27 @@ async fn server() -> tide::Result<tide::Server<State>> {
             .with(services::user::post::error_handler)
             .post(services::user::post::handler);
 
-        router.at("/user").get(services::user::get::handler);
+        router
+            .at("/user")
+            .with(jwt_token_middleware.clone())
+            .get(services::user::get::handler);
 
         router.at("/profiles/:username").nest({
             let mut router = tide::with_state(state.clone());
 
-            router.at("/").get(services::profile::get::handler);
-
-            router.at("/follow").post(services::profile::post::handler);
+            router
+                .at("/")
+                .with(optional_jwt_token_middleware.clone())
+                .get(services::profile::get::handler);
 
             router
                 .at("/follow")
+                .with(jwt_token_middleware.clone())
+                .post(services::profile::post::handler);
+
+            router
+                .at("/follow")
+                .with(jwt_token_middleware.clone())
                 .delete(services::profile::delete::handler);
 
             router
@@ -95,9 +104,22 @@ async fn server() -> tide::Result<tide::Server<State>> {
         router.at("/articles").nest({
             let mut router = tide::with_state(state.clone());
 
-            router.at("/").get(services::article::list::handler);
+            router
+                .at("/")
+                .with(optional_jwt_token_middleware.clone())
+                .get(services::article::list::handler);
 
-            router.at("/feed").get(services::article::feed::handler);
+            router
+                .at("/feed")
+                .with(jwt_token_middleware.clone())
+                .get(services::article::feed::handler);
+
+            router.at("/:slug").get(services::article::get::handler);
+
+            router
+                .at("/")
+                .with(jwt_token_middleware)
+                .post(services::article::post::handler);
 
             router
         });

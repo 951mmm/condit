@@ -116,7 +116,7 @@ pub async fn get_without_auth(
     Ok(row)
 }
 
-pub async fn follow(db_pool: sqlx::PgPool, follower: String, followee: String) -> sqlx::Result<()> {
+pub async fn follow(db_pool: sqlx::PgPool, follower: String, followee: String) -> tide::Result<()> {
     match sqlx::query!(
         r#"
         with
@@ -134,7 +134,7 @@ pub async fn follow(db_pool: sqlx::PgPool, follower: String, followee: String) -
         followee
     ).execute(&db_pool).await {
         Ok(_) => Ok(()),
-        Err(err) => Err(err),
+        Err(err) => Err(err.into()),
     }
 }
 
@@ -142,7 +142,7 @@ pub async fn unfollow(
     db_pool: sqlx::PgPool,
     follower: String,
     followee: String,
-) -> sqlx::Result<()> {
+) -> tide::Result<()> {
     match sqlx::query!(
         r#"
         with 
@@ -162,6 +162,6 @@ pub async fn unfollow(
         followee
     ).execute(&db_pool).await {
         Ok(_) => Ok(()),
-        Err(err) => Err(err),
+        Err(err) => Err(err.into()),
     }
 }
