@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use super::super::*;
 use super::*;
 
@@ -40,6 +42,8 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
 
     let db_pool = req.state().postgres_pool.clone();
 
+    let payload = req.ext::<crate::middlewares::jwt_token::JWTPayload>();
+
     let article_entities = crate::applications::article::list(db_pool.clone(), query).await?;
 
     let mut res_articles = vec![];
@@ -55,9 +59,43 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
             id,
         } = article_entity;
 
-        let res_profile = crate::applications::profile::get_without_auth(db_pool.clone(), author_id.to_owned()).await?;
+        let res_profile = match payload {
+            Some(crate::middlewares::jwt_token::JWTPayload {
+                id: followee_id, ..
+            }) => {
+                crate::applications::profile::get_with_id(
+                    db_pool.clone(),
+                    author_id.to_owned(),
+                    uuid::Uuid::from_str(followee_id.as_str())?,
+                )
+                .await?
+            }
+            None => {
+                crate::applications::profile::get_with_id_without_auth(
+                    db_pool.clone(),
+                    author_id.to_owned(),
+                )
+                .await?
+            }
+        };
 
-        let (favorited, favorites_count) = crate::applications::article::get_favorited_and_count_without_auth(db_pool.clone(), id.to_owned()).await?;
+        let favorited = match payload {
+            Some(crate::middlewares::jwt_token::JWTPayload {
+                id: follower_id, ..
+            }) => {
+                crate::applications::article::get_favorited(
+                    db_pool.clone(),
+                    id.clone(),
+                    uuid::Uuid::from_str(follower_id.as_str())?,
+                )
+                .await?
+            }
+            None => false,
+        };
+
+        let favorites_count =
+            crate::applications::article::get_favorites_count(db_pool.clone(), id.to_owned())
+                .await?;
 
         let res_article = ResArticle {
             slug: id.to_string(),
@@ -68,7 +106,7 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
             updated_at: updated_at.to_string(),
             author: res_profile,
             favorited,
-            favorites_count
+            favorites_count,
         };
 
         res_articles.push(res_article);
@@ -77,6 +115,6 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
 
     response_ok_and_json(Res {
         articles: res_articles,
-        articles_count: len
+        articles_count: len,
     })
 }

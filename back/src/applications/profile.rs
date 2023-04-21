@@ -31,7 +31,41 @@ pub async fn get(
     Ok(row)
 }
 
-pub async fn get_without_auth(
+pub async fn get_with_id(
+    db_pool: sqlx::PgPool,
+    follower_id: uuid::Uuid,
+    followee_id: uuid::Uuid,
+) -> tide::Result<crate::services::profile::ResProfile> {
+    // count(*)=1 should never be none
+    let row = sqlx::query_as_unchecked!(
+        crate::services::profile::ResProfile,
+        r#"
+        with 
+        followee as (
+            select followee_id from condituser 
+            inner join following on condituser.id=following.follower_id where condituser.id=$1
+        ),
+        subscribe as (
+            select count(*)=1 as following from followee 
+            inner join condituser on followee.followee_id=condituser.id where condituser.id=$2
+        ),
+        profile as (
+            select username, bio, image, following from condituser
+            cross join subscribe where condituser.id=$1
+        )
+        select * from profile;
+        "#,
+        follower_id,
+        followee_id,
+    )
+    .fetch_one(&db_pool)
+    .await?;
+
+    Ok(row)
+}
+
+
+pub async fn get_with_id_without_auth(
     db_pool: sqlx::PgPool,
     followee_id: uuid::Uuid,
 ) -> tide::Result<crate::services::profile::ResProfile> {
@@ -58,7 +92,7 @@ pub async fn get_without_auth(
     Ok(row)
 }
 
-pub async fn get_with_username_without_auth(
+pub async fn get_without_auth(
     db_pool: sqlx::PgPool,
     followee: String,
 ) -> tide::Result<crate::services::profile::ResProfile> {

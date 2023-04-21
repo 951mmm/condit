@@ -54,6 +54,7 @@ impl Ware {
         lazy_static::lazy_static! {
             static ref SET: regex::RegexSet = regex::RegexSet::new(&[
                 r"/profiles/.+?/follow$",
+                r"/articles.*?/.+$"
             ]).unwrap();
         }
 

@@ -51,7 +51,7 @@ pub mod get {
 
                 crate::applications::profile::get(db_pool, follower, followee).await?
             },
-            None => crate::applications::profile::get_with_username_without_auth(db_pool, followee).await?
+            None => crate::applications::profile::get_without_auth(db_pool, followee).await?
         };
 
         response_ok_and_json(Res { profile })
