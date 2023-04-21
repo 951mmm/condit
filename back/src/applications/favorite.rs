@@ -48,3 +48,19 @@ pub async fn get_favorites_count(
     .await?;
     Ok(row.count)
 }
+
+pub async fn delete_by_article(db_pool: sqlx::PgPool, article_id: uuid::Uuid) -> tide::Result<()> {
+    match sqlx::query!(
+        r#"
+        delete from favoriting
+        where article_id=$1;
+        "#,
+        article_id
+    )
+    .execute(&db_pool)
+    .await
+    {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.into()),
+    }
+}

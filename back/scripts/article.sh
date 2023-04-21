@@ -35,7 +35,7 @@ curl $cfg \
     -H 'Authorization:Token '${token}'' \
     -X $method \
     -d "$json"
-elif [ $method = "PUT" ]; then
+elif [ $method = "PUT" ] | [ $method = "DELETE" ]; then
 # put article with `slug`
 slugFile=$PWD/slug
 slug=$(cat $slugFile)

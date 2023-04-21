@@ -22,5 +22,7 @@ uuid = { version = "1.3.1", features = ["v4", "serde"] }
 tide-testing = "0.1.3"
 
 [features]
+default=["foreign_key_constraint"]
 debug = []
 token_debug = []
+foreign_key_constraint=[]

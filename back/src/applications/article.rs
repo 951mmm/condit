@@ -1,8 +1,6 @@
 //! there should be a func to join table article and user
 //! there should be a func to join favorited and favoritedCunt
 
-use std::fmt::format;
-
 use super::*;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Default, sqlx::FromRow)]
@@ -26,16 +24,17 @@ pub async fn list(
     db_pool: sqlx::PgPool,
     query: crate::services::article::list::Req,
 ) -> tide::Result<Vec<Entity>> {
+    let crate::services::article::list::Req {
+        author,
+        tag,
+        favorited,
+        limit,
+        offset,
+    } = &query;
+
     let sql_string = format!(
         r#"
-        with 
-        favoriting_name as (
-            select 
-                username as follower_name, 
-                article_id 
-            from favoriting
-            inner join condituser on favoriting.follower_id=condituser.id
-        )
+        {}
         select
             article.id as id,
             title,
@@ -51,27 +50,35 @@ pub async fn list(
         inner join tag on 
             tag.article_id=article.id
             {}
-        inner join favoriting_name on 
-        favoriting_name.article_id=article.id
             {}
         group by article.id
         order by updated_at desc
         limit {} offset {};
         "#,
-        match &query.author {
-            Some(string) => format!("and condituser.username='{}'", string),
-            None => String::default(),
-        },
-        match &query.tag {
-            Some(string) => format!("and tag.name='{}'", string),
-            None => String::default(),
-        },
-        match &query.favorited {
-            Some(string) => format!("and favoriting_name.follower_name='{}'", string),
-            None => String::default(),
-        },
-        query.limit,
-        query.offset,
+        empty_or_statement(
+            r#"
+            with
+            favoriting_name as (
+            select 
+                username as follower_name, 
+                article_id 
+            from favoriting
+            inner join condituser on favoriting.follower_id=condituser.id
+        )"#,
+            favorited
+        ),
+        empty_or_expr("and condituser.username=", author),
+        empty_or_expr("and tag.name=", tag),
+        empty_or_expr(
+            r#"
+            inner join favoriting_name on 
+            favoriting_name.article_id=article.id
+            and favoriting_name.follower_name=
+            "#,
+            favorited
+        ),
+        limit,
+        offset,
     );
 
     tide::log::info!("sql string is: {}", sql_string);
@@ -178,4 +185,20 @@ pub async fn update(
         .await?;
 
     Ok(row)
+}
+
+pub async fn delete(db_pool: sqlx::PgPool, article_id: uuid::Uuid) -> tide::Result<()> {
+    match sqlx::query!(
+        r#"
+        delete from article
+        where id=$1;
+        "#,
+        article_id
+    )
+    .execute(&db_pool)
+    .await
+    {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.into()),
+    }
 }

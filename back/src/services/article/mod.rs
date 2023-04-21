@@ -8,6 +8,7 @@ pub mod get;
 pub mod list;
 pub mod post;
 pub mod put;
+pub mod delete;
 
 // ANCHOR pub obj
 #[derive(serde::Deserialize, serde::Serialize, Debug, Default)]

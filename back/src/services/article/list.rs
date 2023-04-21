@@ -3,14 +3,14 @@ use super::*;
 
 #[derive(serde::Deserialize, Debug)]
 pub struct Req {
-    // #[serde(default)]
-    pub tag: Option<String>,
+    #[serde(default)]
+    pub tag: String,
 
-    // #[serde(default)]
-    pub author: Option<String>,
+    #[serde(default)]
+    pub author: String,
 
-    // #[serde(default)]
-    pub favorited: Option<String>,
+    #[serde(default)]
+    pub favorited: String,
 
     #[serde(default = "default_limit")]
     pub limit: i64,

@@ -120,8 +120,6 @@ async fn server() -> tide::Result<tide::Server<State>> {
                 .with(jwt_token_middleware.clone())
                 .get(services::article::feed::handler);
 
-            router.at("/:slug").get(services::article::get::handler);
-
             router
                 .at("/")
                 .with(jwt_token_middleware.clone())
@@ -130,9 +128,28 @@ async fn server() -> tide::Result<tide::Server<State>> {
 
             router
                 .at("/:slug")
-                .with(jwt_token_middleware)
+                .with(jwt_token_middleware.clone())
                 .with(services::article::write_error_handler)
                 .put(services::article::put::handler);
+
+            router.at("/:slug").nest({
+                let mut router = tide::with_state(state.clone());
+
+                let mut router_with_domain = router.at("/");
+
+                router_with_domain.get(services::article::get::handler);
+
+                router_with_domain
+                    .with(jwt_token_middleware.clone())
+                    .with(services::article::write_error_handler)
+                    .put(services::article::put::handler);
+
+                router_with_domain
+                    .with(jwt_token_middleware)
+                    .delete(services::article::delete::handler);
+
+                router
+            });
 
             router
         });

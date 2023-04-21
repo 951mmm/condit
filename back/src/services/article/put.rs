@@ -21,14 +21,14 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
 
     let db_pool = req.state().postgres_pool.clone();
 
+    let article_id = string_to_uuid(&article_id)?;
+
     let article_entity = crate::applications::article::update(
         db_pool.clone(),
         req_article,
-        string_to_uuid(&article_id)?,
+        article_id,
     )
     .await?;
-
-    let crate::applications::article::Entity { id: article_id, .. } = article_entity;
 
     // TODO diff update
     crate::applications::tag::delete(db_pool.clone(), article_id).await?;

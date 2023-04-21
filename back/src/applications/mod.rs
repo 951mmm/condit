@@ -11,12 +11,38 @@ pub mod tag;
 // ANCHOR utils
 fn empty_or_expr(expr_left: &str, expr_right: &String) -> String {
     match be_empty_string(expr_right) {
-        true => String::from(""),
+        true => String::new(),
         false => format!("{}'{}'",expr_left, expr_right)
     }
 }
 
+fn empty_or_statement(statement: &str, val: &String) -> String {
+    match be_empty_string(val) {
+        true => String::new(),
+        false => String::from(statement)
+    }
+}
 
+
+
+/// create sql expr quickly
+/// gen sql like:
+/// ```sql
+/// ...
+/// where expr1,expr2,expr3...
+/// ```
+/// be careful that there are no ',' at begin and end
+/// 
+/// use joiner to gen
+/// ```rust
+/// let params = Joiner::build(",", |string| false)
+///     .join("expr1".to_string())
+///     .join("expr2".to_string())
+///     .join("expr3".to_string())
+///     .builder();
+/// 
+/// assert_eq!(params, "expr1,expr2,expr3");
+/// ```
 pub struct Joiner {
     inner: String,
     separetor: &'static str,
