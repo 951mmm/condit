@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Home } from "./pages/home";
 import { Article } from "./pages/article";
 import { Header } from "./components/header";
@@ -50,7 +50,7 @@ function App() {
   if (loading) return <p>loading...</p>;
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -64,7 +64,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace={true} />} />
       </Routes>
       <Footer />
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

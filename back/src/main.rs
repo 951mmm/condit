@@ -37,8 +37,20 @@ async fn server() -> tide::Result<tide::Server<State>> {
     let state = State::new().await;
 
     let mut app = tide::with_state(state.clone());
-    #[cfg(not(test))]
-    tide::log::start();
+    if !cfg!(test)
+    {
+        if cfg!(feature = "production") {
+            tide::log::with_level(tide::log::LevelFilter::Warn);
+        }
+        else if cfg!(feature = "debug") {
+            tide::log::with_level(tide::log::LevelFilter::Debug);
+        }
+        else {
+            tide::log::start();
+        }
+        
+        
+    }
 
     #[cfg(test)]
     tide::log::warn!("test mode");
@@ -72,7 +84,7 @@ async fn server() -> tide::Result<tide::Server<State>> {
             .post(services::user::login::handler);
 
         router
-            .at("/user")
+            .at("/users")
             .with(services::user::post::error_handler)
             .post(services::user::post::handler);
 

@@ -32,6 +32,7 @@ export function RegisterForm() {
     e.preventDefault();
     setLoading(true);
     try {
+      console.log(form)
       const data = await User.post.handler({
         user: form,
       });

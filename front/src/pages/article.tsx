@@ -76,7 +76,7 @@ export function Article() {
     }
 
     initComments();
-  }, [URLSlug]);
+  }, []);
 
   if (loading) return <p>loading...</p>;
   return (

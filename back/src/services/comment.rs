@@ -34,6 +34,7 @@ pub async fn get_res_comment(
     db_pool: &sqlx::PgPool,
 ) -> tide::Result<ResComment> {
     let crate::applications::comment::Entity {
+        id,
         user_id,
         created_at,
         updated_at,
@@ -44,7 +45,7 @@ pub async fn get_res_comment(
     let res_profile = get_res_profile(payload, db_pool, user_id).await?;
 
     let res_comment = ResComment {
-        id: user_id.to_string(),
+        id: id.to_string(),
         created_at: created_at.to_string(),
         updated_at: updated_at.to_string(),
         body,
