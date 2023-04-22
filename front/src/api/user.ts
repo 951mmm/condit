@@ -13,6 +13,13 @@ export namespace User {
     interface UserReq
       extends Omit<User, "username" | "token" | "bio" | "image"> {}
     export function handler(body: { user: UserReq }): Promise<{ user: User }> {
+      // let some = {
+      //   pass: "wwwcondit",
+      //   email: "qqqqaaaa@qqqq.com",
+      // };
+      // return POST("/users/login", {
+      //   user: some,
+      // });
       return POST("/users/login", body);
     }
   }
@@ -39,7 +46,7 @@ export namespace User {
       };
     }
 
-    export function handler(body: UserReq): Promise<{user: User}> {
+    export function handler(body: UserReq): Promise<{ user: User }> {
       return POST("/users", body);
     }
   }

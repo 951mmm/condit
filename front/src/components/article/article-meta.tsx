@@ -10,8 +10,6 @@ import { atomUser } from "../../stores/auth";
 export function ArticleMeta() {
   const article = useAtomValue(atomArticle);
   const user = useAtomValue(atomUser);
-  console.log(user.username);
-  console.log(article?.author.username)
 
   if (!article) return <p>loading...</p>;
   return (
