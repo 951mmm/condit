@@ -1,6 +1,5 @@
-use crate::services::{response_ok_and_json, string_to_uuid};
-
-use super::{gen_token, ResAuthUser};
+use super::super::*;
+use super::*;
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct Req {
@@ -38,26 +37,13 @@ pub async fn handler(mut req: tide::Request<crate::State>) -> tide::Result {
 
     let crate::middlewares::jwt_token::JWTPayload { id, .. } = payload;
 
+    let id = string_to_uuid(id)?;
+
     let db_pool = &req.state().postgres_pool;
 
-    let crate::applications::user::Entity {
-        username,
-        image,
-        email,
-        bio,
-        id,
-        ..
-    } = crate::applications::user::update(db_pool, &req_user, string_to_uuid(id)?).await?;
+    let user_entity = crate::applications::user::update(db_pool, &req_user, id).await?;
 
-    let token = gen_token(username.clone(), id.clone())?;
+    let res_user = get_res_user(user_entity)?;
 
-    response_ok_and_json(Res {
-        user: ResAuthUser {
-            username,
-            image,
-            email,
-            bio,
-            token,
-        },
-    })
+    response_ok_and_json(Res { user: res_user })
 }

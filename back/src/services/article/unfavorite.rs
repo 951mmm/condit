@@ -1,9 +1,9 @@
-use crate::services::string_to_uuid;
+use super::*;
 
 pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
     let aritcle_id = req.param("slug").unwrap();
 
-    let article_id = string_to_uuid(&String::from(aritcle_id))?;
+    let article_id = str_to_uuid(aritcle_id)?;
 
     let crate::middlewares::jwt_token::JWTPayload {
         id: follower_id, ..

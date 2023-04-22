@@ -6,7 +6,7 @@ pub struct Res {
     pub article: ResArticle,
 }
 
-pub async fn handler(mut req: tide::Request<crate::State>) -> tide::Result {
+pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
     let req_article = req.ext::<ReqWriteArticle>().unwrap();
 
     let ReqWriteArticle { tag_list, .. } = req_article;

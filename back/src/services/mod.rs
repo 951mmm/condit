@@ -45,6 +45,10 @@ pub fn string_to_uuid(string: &String) -> tide::Result<uuid::Uuid> {
     Ok(uuid::Uuid::from_str(string.as_str())?)
 }
 
+pub fn str_to_uuid(str: &str) -> tide::Result<uuid::Uuid> {
+    Ok(uuid::Uuid::from_str(str)?)
+}
+
 pub async fn get_res_profile(
     payload: Option<&crate::middlewares::jwt_token::JWTPayload>,
     db_pool: &sqlx::PgPool,

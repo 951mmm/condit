@@ -107,7 +107,7 @@ pub mod post {
 
         let article_id = req.param("slug").unwrap();
 
-        let article_id = string_to_uuid(&String::from(article_id))?;
+        let article_id = str_to_uuid(article_id)?;
 
         let payload = req
             .ext::<crate::middlewares::jwt_token::JWTPayload>()
@@ -132,7 +132,7 @@ pub mod post {
 }
 
 pub mod list {
-    use crate::services::{response_ok_and_json, string_to_uuid};
+    use crate::services::{response_ok_and_json, str_to_uuid};
 
     use super::{get_res_comments, ResComment};
 
@@ -144,7 +144,7 @@ pub mod list {
     pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
         let article_id = req.param("slug").unwrap();
 
-        let article_id = string_to_uuid(&String::from(article_id))?;
+        let article_id = str_to_uuid(article_id)?;
 
         let payload = req.ext::<crate::middlewares::jwt_token::JWTPayload>();
 
@@ -161,12 +161,12 @@ pub mod list {
 }
 
 pub mod delete {
-    use crate::services::string_to_uuid;
+    use crate::services::{str_to_uuid};
 
     pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
         let comment_id = req.param("id").unwrap();
 
-        let comment_id = string_to_uuid(&String::from(comment_id))?;
+        let comment_id = str_to_uuid(comment_id)?;
 
         let db_pool = &req.state().postgres_pool;
 

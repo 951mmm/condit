@@ -57,26 +57,11 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
     let user = crate::applications::user::have(db_pool, &user).await?;
 
     match user {
-        Some(user) => {
-            let crate::applications::user::Entity {
-                username,
-                image,
-                email,
-                bio,
-                id,
-                ..
-            } = user;
-
-            let token = gen_token(username.clone(), id)?;
+        Some(user_entity) => {
+            let res_user = get_res_user(user_entity)?;
 
             response_ok_and_json(Res {
-                user: ResAuthUser {
-                    username,
-                    image,
-                    email,
-                    bio,
-                    token,
-                },
+                user: res_user,
             })
         }
         None => {

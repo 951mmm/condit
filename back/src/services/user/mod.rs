@@ -52,6 +52,29 @@ fn gen_token(username: String, id: uuid::Uuid) -> tide::Result<String> {
     Ok(token)
 }
 
+pub fn get_res_user(user_entity: crate::applications::user::Entity) -> tide::Result<ResAuthUser> {
+    let crate::applications::user::Entity {
+        username,
+        image,
+        email,
+        bio,
+        id,
+        ..
+    } = user_entity;
+
+    let token = gen_token(username.clone(), id.clone())?;
+
+    let res_user = ResAuthUser {
+        username,
+        image,
+        email,
+        bio,
+        token,
+    };
+
+    Ok(res_user)
+} 
+
 
 #[cfg(test)]
 pub mod tests {

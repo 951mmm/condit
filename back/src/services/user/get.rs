@@ -23,28 +23,11 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
 
     let uuid = uuid::Uuid::from_str(id.as_str())?;
 
-    let user = crate::applications::user::get(db_pool, uuid).await?;
+    let user_entity = crate::applications::user::get(db_pool, uuid).await?;
 
-    let crate::applications::user::Entity {
-        username,
-        image,
-        email,
-        bio,
-        ..
-    } = user;
+    let res_user = get_res_user(user_entity)?;
 
-    // refresh token
-    let token = gen_token(username.clone(), uuid)?;
-
-    response_ok_and_json(Res {
-        user: ResAuthUser {
-            username,
-            image,
-            email,
-            bio,
-            token,
-        },
-    })
+    response_ok_and_json(Res { user: res_user })
 }
 
 #[cfg(test)]
@@ -54,6 +37,7 @@ pub mod tests {
 
     use super::Res;
 
+    #[allow(unused)]
     pub async fn get_token_string(app: tide::Server<State>) -> String {
         let mut res = app.get("/api/v1/user").await.unwrap();
         let Res {
