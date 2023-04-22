@@ -9,6 +9,8 @@ pub mod list;
 pub mod post;
 pub mod put;
 pub mod delete;
+pub mod favorite;
+pub mod unfavorite;
 
 // ANCHOR pub obj
 #[derive(serde::Deserialize, serde::Serialize, Debug, Default)]
@@ -61,29 +63,9 @@ pub struct ReqWriteArticle {
 }
 
 // ANCHOR utils
-pub async fn get_res_profile(
-    payload: Option<&crate::middlewares::jwt_token::JWTPayload>,
-    db_pool: sqlx::PgPool,
-    author_id: uuid::Uuid,
-) -> tide::Result<crate::services::profile::ResProfile> {
-    match payload {
-        Some(crate::middlewares::jwt_token::JWTPayload {
-            id: followee_id, ..
-        }) => {
-            crate::applications::profile::get_with_id(
-                db_pool,
-                author_id,
-                string_to_uuid(followee_id)?,
-            )
-            .await
-        }
-        None => crate::applications::profile::get_with_id_without_auth(db_pool, author_id).await,
-    }
-}
-
 pub async fn get_favorited(
     payload: Option<&crate::middlewares::jwt_token::JWTPayload>,
-    db_pool: sqlx::PgPool,
+    db_pool: &sqlx::PgPool,
     author_id: uuid::Uuid,
 ) -> tide::Result<bool> {
     match payload {
@@ -104,7 +86,7 @@ pub async fn get_favorited(
 pub async fn get_res_article(
     article_entity: crate::applications::article::Entity,
     payload: Option<&crate::middlewares::jwt_token::JWTPayload>,
-    db_pool: sqlx::PgPool,
+    db_pool: &sqlx::PgPool,
 ) -> tide::Result<ResArticle> {
     let crate::applications::article::Entity {
         author_id,
@@ -116,12 +98,12 @@ pub async fn get_res_article(
         id,
     } = article_entity;
 
-    let res_profile = get_res_profile(payload, db_pool.clone(), author_id).await?;
+    let res_profile = get_res_profile(payload, db_pool, author_id).await?;
 
-    let favorited = get_favorited(payload, db_pool.clone(), author_id).await?;
+    let favorited = get_favorited(payload, db_pool, author_id).await?;
 
     let favorites_count =
-        crate::applications::favorite::get_favorites_count(db_pool.clone(), id).await?;
+        crate::applications::favorite::get_favorites_count(db_pool, id).await?;
 
     let tag_list = crate::applications::tag::get(db_pool, id).await?;
 
@@ -144,12 +126,12 @@ pub async fn get_res_article(
 pub async fn get_res_articles(
     article_entities: Vec<crate::applications::article::Entity>,
     payload: Option<&crate::middlewares::jwt_token::JWTPayload>,
-    db_pool: sqlx::PgPool,
+    db_pool: &sqlx::PgPool,
 ) -> tide::Result<Vec<ResArticle>> {
     let mut res_articles = vec![];
 
     for article_entity in article_entities.into_iter() {
-        let res_article = get_res_article(article_entity, payload, db_pool.clone()).await?;
+        let res_article = get_res_article(article_entity, payload, db_pool).await?;
 
         res_articles.push(res_article);
     }

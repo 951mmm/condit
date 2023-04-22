@@ -52,9 +52,9 @@ pub fn error_handler<'a>(
 pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
     let Req { user } = req.ext::<Req>().unwrap().clone();
 
-    let db_pool = req.state().postgres_pool.clone();
+    let db_pool = &req.state().postgres_pool;
 
-    let user = crate::applications::user::have(db_pool, user).await?;
+    let user = crate::applications::user::have(db_pool, &user).await?;
 
     match user {
         Some(user) => {
@@ -67,7 +67,7 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
                 ..
             } = user;
 
-            let token = gen_token(username.clone(), id.clone())?;
+            let token = gen_token(username.clone(), id)?;
 
             response_ok_and_json(Res {
                 user: ResAuthUser {
@@ -178,7 +178,7 @@ mod tests {
 
         let user_res: Res = res.borrow_mut().body_json().await.unwrap();
 
-        let result = delete(app.state().postgres_pool.clone(), user_res.user.email).await;
+        let result = delete(&app.state().postgres_pool, &user_res.user.email).await;
         assert_eq!(result, true);
     }
 }

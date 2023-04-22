@@ -7,6 +7,8 @@ use serde::Serialize;
 pub mod user;
 pub mod profile;
 pub mod article;
+pub mod comment;
+pub mod tag;
 
 // ANCHOR pub obj
 #[derive(serde::Deserialize, serde::Serialize, Debug, Default)]
@@ -41,4 +43,24 @@ where Res: Serialize {
 
 pub fn string_to_uuid(string: &String) -> tide::Result<uuid::Uuid> {
     Ok(uuid::Uuid::from_str(string.as_str())?)
+}
+
+pub async fn get_res_profile(
+    payload: Option<&crate::middlewares::jwt_token::JWTPayload>,
+    db_pool: &sqlx::PgPool,
+    author_id: uuid::Uuid,
+) -> tide::Result<crate::services::profile::ResProfile> {
+    match payload {
+        Some(crate::middlewares::jwt_token::JWTPayload {
+            id: followee_id, ..
+        }) => {
+            crate::applications::profile::get_with_id(
+                db_pool,
+                author_id,
+                string_to_uuid(followee_id)?,
+            )
+            .await
+        }
+        None => crate::applications::profile::get_with_id_without_auth(db_pool, author_id).await,
+    }
 }

@@ -1,4 +1,3 @@
-use std::str::FromStr;
 
 use super::super::*;
 use super::*;
@@ -19,10 +18,10 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
         id: follower_id, ..
     } = payload;
 
-    let db_pool = req.state().postgres_pool.clone();
+    let db_pool = &req.state().postgres_pool;
 
     let article_entities = crate::applications::article::list_feed(
-        db_pool.clone(),
+        db_pool,
         string_to_uuid(follower_id)?,
     )
     .await?;

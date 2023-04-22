@@ -1,7 +1,7 @@
 pub async fn get(
-    db_pool: sqlx::PgPool,
-    follower: String,
-    followee: String,
+    db_pool: &sqlx::PgPool,
+    follower: &String,
+    followee: &String,
 ) -> tide::Result<crate::services::profile::ResProfile> {
     // count(*)=1 should never be none
     let row = sqlx::query_as_unchecked!(
@@ -25,14 +25,14 @@ pub async fn get(
         follower,
         followee,
     )
-    .fetch_one(&db_pool)
+    .fetch_one(db_pool)
     .await?;
 
     Ok(row)
 }
 
 pub async fn get_with_id(
-    db_pool: sqlx::PgPool,
+    db_pool: &sqlx::PgPool,
     follower_id: uuid::Uuid,
     followee_id: uuid::Uuid,
 ) -> tide::Result<crate::services::profile::ResProfile> {
@@ -58,7 +58,7 @@ pub async fn get_with_id(
         follower_id,
         followee_id,
     )
-    .fetch_one(&db_pool)
+    .fetch_one(db_pool)
     .await?;
 
     Ok(row)
@@ -66,7 +66,7 @@ pub async fn get_with_id(
 
 
 pub async fn get_with_id_without_auth(
-    db_pool: sqlx::PgPool,
+    db_pool: &sqlx::PgPool,
     followee_id: uuid::Uuid,
 ) -> tide::Result<crate::services::profile::ResProfile> {
     let row = sqlx::query_as_unchecked!(
@@ -86,15 +86,15 @@ pub async fn get_with_id_without_auth(
         "#,
         followee_id
     )
-    .fetch_one(&db_pool)
+    .fetch_one(db_pool)
     .await?;
 
     Ok(row)
 }
 
 pub async fn get_without_auth(
-    db_pool: sqlx::PgPool,
-    followee: String,
+    db_pool: &sqlx::PgPool,
+    followee: &String,
 ) -> tide::Result<crate::services::profile::ResProfile> {
     let row = sqlx::query_as_unchecked!(
         crate::services::profile::ResProfile,
@@ -111,12 +111,12 @@ pub async fn get_without_auth(
         cross join following_false where username=$1;
         "#,
         followee
-    ).fetch_one(&db_pool)
+    ).fetch_one(db_pool)
     .await?;
     Ok(row)
 }
 
-pub async fn follow(db_pool: sqlx::PgPool, follower: String, followee: String) -> tide::Result<()> {
+pub async fn follow(db_pool: &sqlx::PgPool, follower: &String, followee: &String) -> tide::Result<()> {
     match sqlx::query!(
         r#"
         with
@@ -132,16 +132,16 @@ pub async fn follow(db_pool: sqlx::PgPool, follower: String, followee: String) -
         "#,
         follower,
         followee
-    ).execute(&db_pool).await {
+    ).execute(db_pool).await {
         Ok(_) => Ok(()),
         Err(err) => Err(err.into()),
     }
 }
 
 pub async fn unfollow(
-    db_pool: sqlx::PgPool,
-    follower: String,
-    followee: String,
+    db_pool: &sqlx::PgPool,
+    follower: &String,
+    followee: &String,
 ) -> tide::Result<()> {
     match sqlx::query!(
         r#"
@@ -160,7 +160,7 @@ pub async fn unfollow(
         "#,
         follower,
         followee
-    ).execute(&db_pool).await {
+    ).execute(db_pool).await {
         Ok(_) => Ok(()),
         Err(err) => Err(err.into()),
     }

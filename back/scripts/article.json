@@ -2,11 +2,9 @@
     "article": {
         "title": "some",
         "description": "some description",
-        "body": "me ",
+        "body": "me update2",
         "tagList": [
-            "tag1",
-            "tag2",
-            "tag555"
+            "tag1"
         ]
     }
 }

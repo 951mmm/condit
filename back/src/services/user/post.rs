@@ -62,18 +62,23 @@ pub fn error_handler<'a>(
             return set_error(res, error_body);
         }
 
-        let db_pool = req.state().postgres_pool.clone();
+        let db_pool = &req.state().postgres_pool;
 
         let mut have_errors = false;
 
-        if crate::applications::user::have_with_username(db_pool.clone(), username.clone()).await? {
+        let (username, email) = futures::join!(
+            crate::applications::user::have_with_username(db_pool, &username),
+            crate::applications::user::have_with_email(db_pool, &email)
+        );
+
+        if username? {
             error_body.errors.username = wrap_err_str("has been already taken");
             have_errors = true;
         }
 
-        if crate::applications::user::have_with_email(db_pool, email.clone()).await? {
+        if email? {
             error_body.errors.email = wrap_err_str("has been already taken");
-            have_errors = true;
+            have_errors = true
         }
 
         if have_errors {
@@ -89,14 +94,14 @@ pub fn error_handler<'a>(
 pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
     let Req { mut user } = req.ext::<Req>().unwrap().clone();
 
-    let db_pool = req.state().postgres_pool.clone();
+    let db_pool = &req.state().postgres_pool;
 
     // set default image url if None
     let default_avatar = std::env::var("DEFAULT_AVATAR")?;
     user.image = Some(String::from(default_avatar));
 
     // connect dao
-    let user = crate::applications::user::create(db_pool, user).await?;
+    let user = crate::applications::user::create(db_pool, &user).await?;
 
     let crate::applications::user::Entity {
         username,
@@ -148,8 +153,8 @@ pub mod tests {
         (app, user)
     }
 
-    async fn delete_and_assert(db_pool: sqlx::PgPool, email: String) {
-        let result = delete(db_pool, email).await;
+    async fn delete_and_assert(db_pool: &sqlx::PgPool, email: String) {
+        let result = delete(db_pool, &email).await;
 
         assert_eq!(result, true);
     }
@@ -171,7 +176,7 @@ pub mod tests {
 
         assert_eq!(user_res.user.image, default_avatar);
 
-        delete_and_assert(app.state().postgres_pool.clone(), user_res.user.email).await;
+        delete_and_assert(&app.state().postgres_pool, user_res.user.email).await;
     }
 
     #[async_std::test]
@@ -254,6 +259,6 @@ pub mod tests {
 
         assert_eq!(error.errors.password.unwrap()[0], "should not be blank");
 
-        delete_and_assert(app.state().postgres_pool.clone(), user.user.email).await;
+        delete_and_assert(&app.state().postgres_pool, user.user.email).await;
     }
 }

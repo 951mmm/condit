@@ -1,5 +1,5 @@
 pub async fn get_favorited(
-    db_pool: sqlx::PgPool,
+    db_pool: &sqlx::PgPool,
     article_id: uuid::Uuid,
     follower_id: uuid::Uuid,
 ) -> tide::Result<bool> {
@@ -21,14 +21,14 @@ pub async fn get_favorited(
         article_id,
         follower_id
     )
-    .fetch_one(&db_pool)
+    .fetch_one(db_pool)
     .await?;
 
     Ok(row.favorited)
 }
 
 pub async fn get_favorites_count(
-    db_pool: sqlx::PgPool,
+    db_pool: &sqlx::PgPool,
     article_id: uuid::Uuid,
 ) -> tide::Result<i64> {
     #[derive(serde::Deserialize)]
@@ -44,12 +44,12 @@ pub async fn get_favorites_count(
         "#,
         article_id
     )
-    .fetch_one(&db_pool)
+    .fetch_one(db_pool)
     .await?;
     Ok(row.count)
 }
 
-pub async fn delete_by_article(db_pool: sqlx::PgPool, article_id: uuid::Uuid) -> tide::Result<()> {
+pub async fn delete_by_article(db_pool: &sqlx::PgPool, article_id: uuid::Uuid) -> tide::Result<()> {
     match sqlx::query!(
         r#"
         delete from favoriting
@@ -57,7 +57,49 @@ pub async fn delete_by_article(db_pool: sqlx::PgPool, article_id: uuid::Uuid) ->
         "#,
         article_id
     )
-    .execute(&db_pool)
+    .execute(db_pool)
+    .await
+    {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.into()),
+    }
+}
+
+pub async fn favorite(
+    db_pool: &sqlx::PgPool,
+    article_id: uuid::Uuid,
+    follower_id: uuid::Uuid,
+) -> tide::Result<()> {
+    match sqlx::query!(
+        r#"
+        insert into favoriting (follower_id, article_id)
+        values ($1, $2);
+        "#,
+        follower_id,
+        article_id
+    )
+    .execute(db_pool)
+    .await
+    {
+        Ok(_) => Ok(()),
+        Err(err) => Err(err.into()),
+    }
+}
+
+pub async fn unfavorite(
+    db_pool: &sqlx::PgPool,
+    article_id: uuid::Uuid,
+    follower_id: uuid::Uuid,
+) -> tide::Result<()> {
+    match sqlx::query!(
+        r#"
+        delete from favoriting
+        where follower_id=$1 and article_id=$2;
+        "#,
+        follower_id,
+        article_id
+    )
+    .execute(db_pool)
     .await
     {
         Ok(_) => Ok(()),

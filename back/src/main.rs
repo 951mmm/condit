@@ -72,7 +72,7 @@ async fn server() -> tide::Result<tide::Server<State>> {
             .post(services::user::login::handler);
 
         router
-            .at("/users")
+            .at("/user")
             .with(services::user::post::error_handler)
             .post(services::user::post::handler);
 
@@ -86,6 +86,8 @@ async fn server() -> tide::Result<tide::Server<State>> {
             .with(jwt_token_middleware.clone())
             .put(services::user::put::handler);
 
+        router.at("/tags").get(services::tag::list::handler);
+
         router.at("/profiles/:username").nest({
             let mut router = tide::with_state(state.clone());
 
@@ -97,12 +99,12 @@ async fn server() -> tide::Result<tide::Server<State>> {
             router
                 .at("/follow")
                 .with(jwt_token_middleware.clone())
-                .post(services::profile::post::handler);
+                .post(services::profile::follow::handler);
 
             router
                 .at("/follow")
                 .with(jwt_token_middleware.clone())
-                .delete(services::profile::delete::handler);
+                .delete(services::profile::unfollow::handler);
 
             router
         });
@@ -126,27 +128,53 @@ async fn server() -> tide::Result<tide::Server<State>> {
                 .with(services::article::write_error_handler)
                 .post(services::article::post::handler);
 
-            router
-                .at("/:slug")
-                .with(jwt_token_middleware.clone())
-                .with(services::article::write_error_handler)
-                .put(services::article::put::handler);
-
             router.at("/:slug").nest({
                 let mut router = tide::with_state(state.clone());
 
-                let mut router_with_domain = router.at("/");
+                router.at("/").get(services::article::get::handler);
 
-                router_with_domain.get(services::article::get::handler);
-
-                router_with_domain
+                router
+                    .at("/")
                     .with(jwt_token_middleware.clone())
                     .with(services::article::write_error_handler)
                     .put(services::article::put::handler);
 
-                router_with_domain
-                    .with(jwt_token_middleware)
+                router
+                    .at("/")
+                    .with(jwt_token_middleware.clone())
                     .delete(services::article::delete::handler);
+
+                router
+                    .at("/favorite")
+                    .with(jwt_token_middleware.clone())
+                    .post(services::article::favorite::handler);
+
+                router
+                    .at("/favorite")
+                    .with(jwt_token_middleware.clone())
+                    .delete(services::article::unfavorite::handler);
+
+                router.at("comments").nest({
+                    let mut router = tide::with_state(state.clone());
+
+                    router
+                        .at("/")
+                        .with(jwt_token_middleware.clone())
+                        .with(services::comment::write_error_handler)
+                        .post(services::comment::post::handler);
+
+                    router
+                        .at("/")
+                        .with(optional_jwt_token_middleware.clone())
+                        .get(services::comment::list::handler);
+
+                    router
+                        .at("/:id")
+                        .with(jwt_token_middleware.clone())
+                        .delete(services::comment::delete::handler);
+
+                    router
+                });
 
                 router
             });

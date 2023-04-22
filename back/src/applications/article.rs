@@ -1,4 +1,5 @@
 //! there should be a func to join table article and user
+//! 
 //! there should be a func to join favorited and favoritedCunt
 
 use super::*;
@@ -21,8 +22,8 @@ pub struct Entity {
 }
 
 pub async fn list(
-    db_pool: sqlx::PgPool,
-    query: crate::services::article::list::Req,
+    db_pool: &sqlx::PgPool,
+    query: &crate::services::article::list::Req,
 ) -> tide::Result<Vec<Entity>> {
     let crate::services::article::list::Req {
         author,
@@ -83,12 +84,12 @@ pub async fn list(
 
     tide::log::info!("sql string is: {}", sql_string);
 
-    let row = sqlx::query_as(&sql_string).fetch_all(&db_pool).await?;
+    let row = sqlx::query_as(&sql_string).fetch_all(db_pool).await?;
     Ok(row)
 }
 
 pub async fn list_feed(
-    db_pool: sqlx::PgPool,
+    db_pool: &sqlx::PgPool,
     follower_id: uuid::Uuid,
 ) -> tide::Result<Vec<Entity>> {
     let rows = sqlx::query_as!(
@@ -109,13 +110,13 @@ pub async fn list_feed(
         "#,
         follower_id
     )
-    .fetch_all(&db_pool)
+    .fetch_all(db_pool)
     .await?;
 
     Ok(rows)
 }
 
-pub async fn get(db_pool: sqlx::PgPool, id: uuid::Uuid) -> tide::Result<Entity> {
+pub async fn get(db_pool: &sqlx::PgPool, id: uuid::Uuid) -> tide::Result<Entity> {
     let row = sqlx::query_as!(
         Entity,
         r#"
@@ -124,15 +125,15 @@ pub async fn get(db_pool: sqlx::PgPool, id: uuid::Uuid) -> tide::Result<Entity> 
         "#,
         id
     )
-    .fetch_one(&db_pool)
+    .fetch_one(db_pool)
     .await?;
 
     Ok(row)
 }
 
 pub async fn create(
-    db_pool: sqlx::PgPool,
-    req_article: crate::services::article::ReqWriteArticle,
+    db_pool: &sqlx::PgPool,
+    req_article: &crate::services::article::ReqWriteArticle,
     author_id: uuid::Uuid,
 ) -> tide::Result<Entity> {
     let row = sqlx::query_as!(
@@ -146,15 +147,15 @@ pub async fn create(
         req_article.body,
         author_id
     )
-    .fetch_one(&db_pool)
+    .fetch_one(db_pool)
     .await?;
 
     Ok(row)
 }
 
 pub async fn update(
-    db_pool: sqlx::PgPool,
-    req_article: crate::services::article::ReqWriteArticle,
+    db_pool: &sqlx::PgPool,
+    req_article: &crate::services::article::ReqWriteArticle,
     author_id: uuid::Uuid,
 ) -> tide::Result<Entity> {
     let crate::services::article::ReqWriteArticle {
@@ -173,7 +174,7 @@ pub async fn update(
     let sql_string = format!(
         r#"
         update article
-        set {}
+        set {}, updated_at=now()
         where id='{}'
         returning *;
         "#,
@@ -181,13 +182,13 @@ pub async fn update(
     );
 
     let row = sqlx::query_as(&sql_string.as_str())
-        .fetch_one(&db_pool)
+        .fetch_one(db_pool)
         .await?;
 
     Ok(row)
 }
 
-pub async fn delete(db_pool: sqlx::PgPool, article_id: uuid::Uuid) -> tide::Result<()> {
+pub async fn delete(db_pool: &sqlx::PgPool, article_id: uuid::Uuid) -> tide::Result<()> {
     match sqlx::query!(
         r#"
         delete from article
@@ -195,7 +196,7 @@ pub async fn delete(db_pool: sqlx::PgPool, article_id: uuid::Uuid) -> tide::Resu
         "#,
         article_id
     )
-    .execute(&db_pool)
+    .execute(db_pool)
     .await
     {
         Ok(_) => Ok(()),

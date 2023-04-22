@@ -38,7 +38,7 @@ pub async fn handler(mut req: tide::Request<crate::State>) -> tide::Result {
 
     let crate::middlewares::jwt_token::JWTPayload { id, .. } = payload;
 
-    let db_pool = req.state().postgres_pool.clone();
+    let db_pool = &req.state().postgres_pool;
 
     let crate::applications::user::Entity {
         username,
@@ -47,7 +47,7 @@ pub async fn handler(mut req: tide::Request<crate::State>) -> tide::Result {
         bio,
         id,
         ..
-    } = crate::applications::user::update(db_pool, req_user, string_to_uuid(id)?).await?;
+    } = crate::applications::user::update(db_pool, &req_user, string_to_uuid(id)?).await?;
 
     let token = gen_token(username.clone(), id.clone())?;
 

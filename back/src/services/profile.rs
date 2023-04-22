@@ -39,7 +39,7 @@ pub mod get {
 
         let followee = String::from(followee);
 
-        let db_pool = req.state().postgres_pool.clone();
+        let db_pool = &req.state().postgres_pool;
 
         let profile = match req.ext::<crate::middlewares::jwt_token::JWTPayload>() {
             Some(payload) => {
@@ -49,56 +49,56 @@ pub mod get {
 
                 let follower = String::from(follower);
 
-                crate::applications::profile::get(db_pool, follower, followee).await?
+                crate::applications::profile::get(db_pool, &follower, &followee).await?
             },
-            None => crate::applications::profile::get_without_auth(db_pool, followee).await?
+            None => crate::applications::profile::get_without_auth(db_pool, &followee).await?
         };
 
         response_ok_and_json(Res { profile })
     }
 }
 
-pub mod post {
+pub mod follow {
 
     use super::*;
 
     pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
         let (follower, followee) = get_follower_and_followee(&req)?;
 
-        let db_pool = req.state().postgres_pool.clone();
+        let db_pool = &req.state().postgres_pool;
 
         // build follow relationship
         crate::applications::profile::follow(
-            db_pool.clone(),
-            follower.clone(),
-            followee.clone(),
+            db_pool,
+            &follower,
+            &followee,
         )
         .await?;
 
         // set res body with 'profile'
-        let profile = crate::applications::profile::get(db_pool, follower, followee).await?;
+        let profile = crate::applications::profile::get(db_pool, &follower, &followee).await?;
 
         response_ok_and_json(Res { profile })
     }
 }
 
-pub mod delete {
+pub mod unfollow {
     use super::*;
 
     pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
         let (follower, followee) = get_follower_and_followee(&req)?;
 
-        let db_pool = req.state().postgres_pool.clone();
+        let db_pool = &req.state().postgres_pool;
 
         crate::applications::profile::unfollow(
-            db_pool.clone(),
-            follower.clone(),
-            followee.clone(),
+            db_pool,
+            &follower,
+            &followee,
         )
         .await?;
 
         let profile =
-            crate::applications::profile::get(db_pool, follower.clone(), followee.clone()).await?;
+            crate::applications::profile::get(db_pool, &follower, &followee).await?;
 
         response_ok_and_json(Res { profile })
     }

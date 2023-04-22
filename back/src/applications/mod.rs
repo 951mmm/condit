@@ -7,6 +7,7 @@ pub mod profile;
 pub mod article;
 pub mod favorite;
 pub mod tag;
+pub mod comment;
 
 // ANCHOR utils
 fn empty_or_expr(expr_left: &str, expr_right: &String) -> String {
@@ -32,7 +33,7 @@ fn empty_or_statement(statement: &str, val: &String) -> String {
 /// where expr1,expr2,expr3...
 /// ```
 /// be careful that there are no ',' at begin and end
-/// 
+/// # example
 /// use joiner to gen
 /// ```rust
 /// let params = Joiner::build(",", |string| false)

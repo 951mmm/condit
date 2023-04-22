@@ -38,11 +38,11 @@ fn default_limit() -> i64 {
 pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
     let query: Req = req.query()?;
 
-    let db_pool = req.state().postgres_pool.clone();
+    let db_pool = &req.state().postgres_pool;
 
     let payload = req.ext::<crate::middlewares::jwt_token::JWTPayload>();
 
-    let article_entities = crate::applications::article::list(db_pool.clone(), query).await?;
+    let article_entities = crate::applications::article::list(db_pool, &query).await?;
 
     let res_articles = get_res_articles(article_entities, payload, db_pool).await?;
 

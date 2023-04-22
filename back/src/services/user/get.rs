@@ -16,10 +16,10 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
     let payload = req
         .ext::<crate::middlewares::jwt_token::JWTPayload>()
         .unwrap();
-
+    tide::log::info!("get article");
     let crate::middlewares::jwt_token::JWTPayload { id, .. } = payload;
 
-    let db_pool = req.state().postgres_pool.clone();
+    let db_pool = &req.state().postgres_pool;
 
     let uuid = uuid::Uuid::from_str(id.as_str())?;
 

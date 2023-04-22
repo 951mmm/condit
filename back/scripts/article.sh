@@ -35,22 +35,46 @@ curl $cfg \
     -H 'Authorization:Token '${token}'' \
     -X $method \
     -d "$json"
-elif [ $method = "PUT" ] | [ $method = "DELETE" ]; then
+elif 
+    [ $method = "PUT" ] || 
+    [ $method = "DELETE" ] || 
+    [ $method = "GET" ]; 
+then
 # put article with `slug`
 slugFile=$PWD/slug
 slug=$(cat $slugFile)
 url=${base}/articles/$slug
-
 curl $cfg \
     $url \
     -H 'Authorization:Token '${token}'' \
     -X $method \
     -d "$json"
 
-else
+elif [ $method = "LIST" ]; then
 curl $cfg \
     $url \
     -H 'Authorization:Token '${token}'' \
     -H "Authorization:Fxxk" \
-    -X $method
+    -X GET
+
+elif [ $method = "FAV" ]; then 
+slugFile=$PWD/slug
+slug=$(cat $slugFile)
+url=${base}/articles/$slug/favorite
+curl $cfg \
+    $url \
+    -H 'Authorization:Token '${token}'' \
+    -X POST \
+    -d "$json"
+
+elif [ $method = "UNFAV" ]; then
+slugFile=$PWD/slug
+slug=$(cat $slugFile)
+url=${base}/articles/"$slug"/favorite
+curl $cfg \
+    $url \
+    -H 'Authorization:Token '${token}'' \
+    -X DELETE \
+    -d "$json"
+
 fi
