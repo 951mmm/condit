@@ -5,7 +5,7 @@ pub struct JWTPayload {
     pub exp: i64,
 }
 
-pub fn crypt<Payload: serde::Serialize + serde::de::DeserializeOwned + Send + Sync + 'static>(
+pub fn crypt<Payload: serde::Serialize + serde::de::DeserializeOwned>(
     key: String,
     payload: &Payload,
 ) -> Result<String, jsonwebtoken::errors::Error> {

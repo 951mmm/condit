@@ -13,8 +13,12 @@ pub async fn get(
             inner join following on condituser.id=following.follower_id where username=$1
         ),
         subscribe as (
-            select count(*)=1 as following from followee 
-            inner join condituser on followee.followee_id=condituser.id where username=$2
+            select exists (
+                select 1 
+                from followee 
+                inner join condituser on followee.followee_id = condituser.id 
+                where condituser.username = $2
+            ) as following
         ),
         profile as (
             select username, bio, image, following from condituser

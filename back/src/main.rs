@@ -70,10 +70,11 @@ async fn server() -> tide::Result<tide::Server<State>> {
     let jwt_token_middleware = middlewares::jwt_token::Ware::new(jwt_key.clone(), false)?;
     let optional_jwt_token_middleware = middlewares::jwt_token::Ware::new(jwt_key, true)?;
 
+    #[cfg(feature = "production")]
+    {
     app.at("/").serve_file(index_path)?;
-
     app.at("/assets").serve_dir(assets_dir)?;
-
+    }
     // server
     app.at("/api/v1").nest({
         let mut router = tide::with_state(state.clone());

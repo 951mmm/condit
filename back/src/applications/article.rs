@@ -106,7 +106,7 @@ pub async fn list_feed(
         from article
         inner join favoriting
         on favoriting.article_id=article.id
-        and favoriting.follower_id=$1
+        where favoriting.follower_id=$1
         "#,
         follower_id
     )
