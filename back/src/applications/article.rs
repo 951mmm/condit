@@ -24,7 +24,7 @@ pub struct Entity {
 pub async fn list(
     db_pool: &sqlx::PgPool,
     query: &crate::services::article::list::Req,
-) -> tide::Result<Vec<Entity>> {
+) -> tide::Result<(Vec<Entity>, i64)> {
     let crate::services::article::list::Req {
         author,
         tag,
@@ -82,10 +82,52 @@ pub async fn list(
         offset,
     );
 
+    // total cnt query
+    let cnt_sql_string = format!(
+        r#"
+        {}
+        select
+            count(distinct article.id)
+        from article
+        inner join condituser on 
+            author_id=condituser.id
+            {}
+        inner join tag on 
+            tag.article_id=article.id
+            {}
+            {}
+        "#,
+        empty_or_statement(
+            r#"
+            with
+            favoriting_name as (
+            select 
+                username as follower_name, 
+                article_id 
+            from favoriting
+            inner join condituser on favoriting.follower_id=condituser.id
+        )"#,
+            favorited
+        ),
+        empty_or_expr("and condituser.username=", author),
+        empty_or_expr("and tag.name=", tag),
+        empty_or_expr(
+            r#"
+            inner join favoriting_name on 
+            favoriting_name.article_id=article.id
+            and favoriting_name.follower_name=
+            "#,
+            favorited
+        ),
+    );
+
     // tide::log::info!("sql string is: {}", sql_string);
 
+
     let row = sqlx::query_as(&sql_string).fetch_all(db_pool).await?;
-    Ok(row)
+    
+    let (total_cnt, ): (i64,) = sqlx::query_as(&cnt_sql_string).fetch_one(db_pool).await?;
+    Ok((row, total_cnt))
 }
 
 pub async fn list_feed(

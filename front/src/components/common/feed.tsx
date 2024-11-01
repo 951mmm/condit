@@ -1,5 +1,11 @@
 import { useAtom, useAtomValue } from "jotai";
-import { atomFeedQuery, atomFeedQueryType, atomPage, atomQueryLimit } from "../../stores/feed";
+import {
+  atomFavorTrigger,
+  atomFeedQuery,
+  atomFeedQueryType,
+  atomPage,
+  atomQueryLimit,
+} from "../../stores/feed";
 import { Article } from "../../api/article";
 import { useEffect, useState } from "react";
 import { ArticlePreview } from "./article-preview";
@@ -10,13 +16,14 @@ export function Feed() {
   // ANCHOR state
   const [loading, setLoading] = useState(false);
   const [articles, setArticles] = useState<Article.Article[]>([]);
-  const [articleCount, setArticleCount] = useState(0); 
-  
+  const [articleCount, setArticleCount] = useState(0);
+
   // ANCHOR store
   const feedType = useAtomValue(atomFeedQueryType);
   const feedQuery = useAtomValue(atomFeedQuery);
   const [page, setPage] = useAtom(atomPage);
   const limit = useAtomValue(atomQueryLimit);
+  const [favorTrigger, setFavorTrigger] = useAtom(atomFavorTrigger);
 
   // ANCHOR effect
   useEffect(() => {
@@ -24,9 +31,12 @@ export function Feed() {
   }, [feedType, feedQuery]);
 
   useEffect(() => {
+    setFavorTrigger(false);
+  }, [articleCount]);
+
+  useEffect(() => {
     const controller = new AbortController();
-    const  { signal } = controller;
-    
+    const { signal } = controller;
 
     async function initArticles() {
       setLoading(true);
@@ -35,7 +45,7 @@ export function Feed() {
           `${feedQuery}limit=${limit}&offset=${limit * (page - 1)}`,
           signal
         );
-        console.log(articles);
+      
         setArticles(articles);
         setArticleCount(articlesCount);
         setLoading(false);
@@ -43,13 +53,12 @@ export function Feed() {
         errHandler(e);
       }
     }
-
     initArticles();
 
     return () => {
       controller.abort();
     };
-  }, [feedType, feedQuery, page]);
+  }, [feedType, feedQuery, page, favorTrigger]);
 
   // ANCHOR render
   if (loading) {
@@ -67,7 +76,5 @@ export function Feed() {
       ))}
       <Pagination articlesCount={articleCount} />
     </>
-  )
-
-  
+  );
 }

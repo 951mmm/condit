@@ -12,9 +12,11 @@ export function Pagination({ articlesCount }: PaginationProps) {
   const limit = useAtomValue(atomQueryLimit);
   const pageLink = useAtomValue(atomPageLink);
   const pageCnt = Math.ceil(articlesCount / limit);
+  
   const addOne = (n: number) => n + 1;
   const pageIndex = [...Array(pageCnt).keys()].map(addOne);
 
+  // ANCHOR render
   if (pageCnt === 1) return <></>;
   return (
     <nav>

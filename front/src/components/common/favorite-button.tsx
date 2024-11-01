@@ -1,9 +1,10 @@
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { MouseEvent, useCallback, useState } from "react";
 import { atomIsLogin } from "../../stores/auth";
 import { useNavigate } from "react-router-dom";
 import { Article } from "../../api/article";
 import { errHandler } from "../../utils";
+import { atomFavorTrigger, atomFeedQueryType } from "../../stores/feed";
 
 interface FavoriteButtonProps {
   slug: string;
@@ -26,6 +27,8 @@ export function FavoriteButton({
   // ANCHOR store
   const isLogin = useAtomValue(atomIsLogin);
   const navigate = useNavigate();
+  const setFavorTrigger = useSetAtom(atomFavorTrigger);
+  const feedType = useAtomValue(atomFeedQueryType);
 
   // ANCHOR event
   async function favorite() {
@@ -60,6 +63,11 @@ export function FavoriteButton({
       console.error('Error toggling favorite:', error);
     }
     setLoading(false);
+
+    if(feedType == "user") {
+      console.log("changed");
+      setFavorTrigger(true);
+    }
   }, [isLogin, navigate, favorited]);
 
   return (

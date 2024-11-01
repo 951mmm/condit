@@ -24,7 +24,7 @@ pub struct Res {
     articles: Vec<ResArticle>,
 
     #[serde(rename = "articlesCount")]
-    articles_count: usize,
+    articles_count: i64,
 }
 
 fn default_offset() -> i64 {
@@ -42,13 +42,12 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
 
     let payload = req.ext::<crate::middlewares::jwt_token::JWTPayload>();
 
-    let article_entities = crate::applications::article::list(db_pool, &query).await?;
+    let (article_entities, len) = crate::applications::article::list(db_pool, &query).await?;
 
     let res_articles = get_res_articles(article_entities, payload, db_pool).await?;
 
     tide::log::info!("resolved articles are: {:?}", res_articles);
 
-    let len = res_articles.len();
 
     response_ok_and_json(Res {
         articles: res_articles,

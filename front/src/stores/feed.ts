@@ -1,8 +1,8 @@
 import { atom } from "jotai";
 
-export const atomFeedQueryType = atom<
-  "user" | "global" | "tag" | "private" | "favorites"
->("global");
+type FeedType = "user" | "global" | "tag" | "private" | "favorites";
+
+export const atomFeedQueryType = atom<FeedType>("global");
 
 export const atomTagName = atom("");
 
@@ -36,7 +36,7 @@ export const atomSetFeedQuery = atom(
   (
     _,
     set,
-    [type, meta]: ["user" | "global" | "tag" | "private" | "favorites", string?]
+    [type, meta]: [FeedType, string?]
   ) => {
     set(atomFeedQueryType, type);
     if (type === "tag") {
@@ -56,3 +56,5 @@ export const atomSetFeedQuery = atom(
 export const atomQueryLimit = atom(10);
 
 export const atomPage = atom(1);
+
+export const atomFavorTrigger = atom(false);
