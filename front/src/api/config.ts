@@ -9,6 +9,7 @@ interface fetcherProps {
 
 async function fetcher({ method, url, body, signal }: fetcherProps) {
   const jwtToken = localStorage.getItem("jwtToken");
+  // console.log("jwtToken is", jwtToken);
   const config = {
     baseURL: import.meta.env.VITE_BASE_URL_PRIVATE,
     headers: {

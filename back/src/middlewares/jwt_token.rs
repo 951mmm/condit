@@ -1,3 +1,5 @@
+use async_std::println;
+
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 pub struct JWTPayload {
     pub id: String,
@@ -42,6 +44,10 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
         next: tide::Next<'_, State>,
     ) -> tide::Result {
 
+        #[cfg(feature = "no_jwt")]
+        return Ok(next.run(req).await);
+
+         // Unauthorized response
         let res_unauth = tide::Response::new(tide::StatusCode::Unauthorized);
 
         if let Some(auth) = req.header("Authorization") {
@@ -61,47 +67,29 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
                 tide::log::info!("token is {}", token);
 
                 // decrypt payload fron token
-                let payload = match jsonwebtoken::decode::<JWTPayload>(
+                let payload = jsonwebtoken::decode::<JWTPayload>(
                     token,
                     &self.base64_key,
                     &jsonwebtoken::Validation::default(),
-                ) {
-                    Ok(payload) => payload,
-                    Err(_) => match self.is_optional {
+                );
+                match payload {
+                    Ok(payload) => {
+                        tide::log::info!("JWT token claims is {:?}", payload.claims);
+                        req.set_ext(payload.claims);
+                        return Ok(next.run(req).await);
+                    },
+                    Err(e) =>{
+                        tide::log::info!("JWT decode failed: {}", e);
+                        match self.is_optional {
                         true => return Ok(next.run(req).await),
-                        false => return Ok(res_unauth),
-                    }
+                        false => return Ok(res_unauth)
+                    }}
                 };
 
-                // get expire of claims
-                let jsonwebtoken::TokenData { claims, .. } = payload;
-
-                let JWTPayload { exp, .. } = claims;
-
-                let current_time = chrono::Utc::now().timestamp();
-
-                // should not auth expire when testing
-                if cfg!(test) || cfg!(feature = "debug") {
-                    req.set_ext(claims);
-                    return Ok(next.run(req).await);
-                }
-
-                #[cfg(feature = "token_debug")]
-                tide::log::info!("current: {}, exp: {}", current_time, exp);
-
-                // whether expired
-                if current_time < exp {
-                    req.set_ext(claims);
-                    return Ok(next.run(req).await);
-                } else {
-                    match self.is_optional {
-                        true => return Ok(next.run(req).await),
-                        false => return Ok(res_unauth),
-                    }
-                }
             }
         }
 
+        // If no Authorization header, check optional setting
         match self.is_optional {
             true => return Ok(next.run(req).await),
             false => return Ok(res_unauth),

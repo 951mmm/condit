@@ -34,29 +34,25 @@ export const atomFeedQuery = atom<string>((get) => {
 export const atomSetFeedQuery = atom(
   null,
   (
-    get,
+    _,
     set,
     [type, meta]: ["user" | "global" | "tag" | "private" | "favorites", string?]
   ) => {
     set(atomFeedQueryType, type);
-    if (type === "user" || type === "global" || type === "tag") {
-      set(atomPageLink, "/");
-    }
     if (type === "tag") {
       set(atomTagName, meta!);
-    }
-    if (type === "private" || type === "favorites") {
+      set(atomPageLink, "/");
+    } else if (["private", "favorites"].includes(type)) {
       set(atomUserId, meta!);
-    }
-    if (type === "private") {
-      set(atomPageLink, `/profile/${meta}`);
-    }
-    if (type === "favorites") {
-      set(atomPageLink, `/profile/${meta}/favorites`);
+      set(
+        atomPageLink,
+        `/profile/${meta}/${type === "favorites" ? "favorites" : ""}`
+      );
+    } else {
+      set(atomPageLink, "/");
     }
   }
 );
-
 export const atomQueryLimit = atom(10);
 
 export const atomPage = atom(1);

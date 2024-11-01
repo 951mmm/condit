@@ -25,6 +25,23 @@ impl State {
     }
 }
 
+// fn setup_logger() -> Result<(), fern::InitError> {
+//     fern::Dispatch::new()
+//         .format(|out, message, record| {
+//             out.finish(format_args!(
+//                 "{}[{}][{}] {}",
+//                 chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+//                 record.target(),
+//                 record.level(),
+//                 message
+//             ))
+//         })
+//         .level(log::LevelFilter::Info)
+//         .chain(std::io::stdout())  // 同时输出到控制台
+//         .chain(fern::log_file("output.log")?) // 输出到文件
+//         .apply()?;
+//     Ok(())
+// }
 #[async_std::main]
 async fn main() -> tide::Result<()> {
     server().await?;
@@ -69,6 +86,8 @@ async fn server() -> tide::Result<tide::Server<State>> {
     let jwt_key = std::env::var("JWT_KEY")?;
     let jwt_token_middleware = middlewares::jwt_token::Ware::new(jwt_key.clone(), false)?;
     let optional_jwt_token_middleware = middlewares::jwt_token::Ware::new(jwt_key, true)?;
+    // setup_logger().expect("Logger setup failed");
+    // app.with(LogMiddleware::new());
 
     #[cfg(feature = "production")]
     {

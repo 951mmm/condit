@@ -82,7 +82,7 @@ pub async fn list(
         offset,
     );
 
-    tide::log::info!("sql string is: {}", sql_string);
+    // tide::log::info!("sql string is: {}", sql_string);
 
     let row = sqlx::query_as(&sql_string).fetch_all(db_pool).await?;
     Ok(row)

@@ -46,6 +46,8 @@ pub async fn handler(req: tide::Request<crate::State>) -> tide::Result {
 
     let res_articles = get_res_articles(article_entities, payload, db_pool).await?;
 
+    tide::log::info!("resolved articles are: {:?}", res_articles);
+
     let len = res_articles.len();
 
     response_ok_and_json(Res {

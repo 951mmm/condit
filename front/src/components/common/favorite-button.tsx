@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue } from "jotai";
-import { MouseEvent, useState } from "react";
+import { MouseEvent, useCallback, useState } from "react";
 import { atomIsLogin } from "../../stores/auth";
 import { useNavigate } from "react-router-dom";
 import { Article } from "../../api/article";
@@ -48,24 +48,24 @@ export function FavoriteButton({
     }
   }
 
-  async function onClick() {
+  const onClick = useCallback(async () => {
     if (!isLogin) {
       navigate("/login");
       return;
     }
     setLoading(true);
-    favorited ? await disFavorite() : await favorite();
+    try {
+      await (favorited ? disFavorite() : favorite());
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
     setLoading(false);
-  }
+  }, [isLogin, navigate, favorited]);
 
   return (
     <button
       type="button"
-      className={
-        favorited
-          ? `btn btn-sm btn-primary ${loading ? "disabled" : ""}`
-          : `btn btn-sm btn-outline-primary ${loading ? "disabled" : ""}`
-      }
+      className={`btn btn-sm ${favorited ? 'btn-primary' : 'btn-outline-primary'} ${loading && 'disabled'}`}
       onClick={onClick}
     >
       {

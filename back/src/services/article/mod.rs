@@ -66,7 +66,7 @@ pub struct ReqWriteArticle {
 pub async fn get_favorited(
     payload: Option<&crate::middlewares::jwt_token::JWTPayload>,
     db_pool: &sqlx::PgPool,
-    author_id: uuid::Uuid,
+    article_id: uuid::Uuid,
 ) -> tide::Result<bool> {
     match payload {
         Some(crate::middlewares::jwt_token::JWTPayload {
@@ -74,7 +74,7 @@ pub async fn get_favorited(
         }) => {
             crate::applications::favorite::get_favorited(
                 db_pool,
-                author_id,
+                article_id,
                 string_to_uuid(follower_id)?,
             )
             .await
@@ -100,7 +100,7 @@ pub async fn get_res_article(
 
     let res_profile = get_res_profile(payload, db_pool, author_id).await?;
 
-    let favorited = get_favorited(payload, db_pool, author_id).await?;
+    let favorited = get_favorited(payload, db_pool, id).await?;
 
     let favorites_count =
         crate::applications::favorite::get_favorites_count(db_pool, id).await?;

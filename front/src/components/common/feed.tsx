@@ -35,7 +35,7 @@ export function Feed() {
           `${feedQuery}limit=${limit}&offset=${limit * (page - 1)}`,
           signal
         );
-
+        console.log(articles);
         setArticles(articles);
         setArticleCount(articlesCount);
         setLoading(false);

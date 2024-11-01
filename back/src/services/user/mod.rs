@@ -25,7 +25,7 @@ pub struct ResAuthUser {
 fn gen_token(username: String, id: uuid::Uuid) -> tide::Result<String> {
     let jwt_key = std::env::var("JWT_KEY")?;
 
-    let exp = if cfg!(feature = "token_debug") {
+    let exp = if cfg!(feature = "no_jwt") {
         chrono::Utc::now()
             .checked_add_signed(chrono::Duration::seconds(1))
             .unwrap_or(chrono::Utc::now())
