@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  frontend:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install yarn
+        run: npm install yarn -g
+
+      - name: Install dependencies
+        working-directory: front
+        run: yarn
+
+      - name: Build frontend
+        working-directory: front
+        run: yarn build
+
+  backend:
+    runs-on: ubuntu-22.04
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: ${{ secrets.DB_USER }}      # 使用 GitHub Secrets
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }} # 使用 GitHub Secrets
+          POSTGRES_DB: ${{ secrets.DB_NAME }}          # 使用 GitHub Secrets
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ${{ secrets.DB_USER }}" 
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_NAME }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until pg_isready -h localhost -p 5432 -U ${{ secrets.DB_USER }}; do
+            echo "Waiting for PostgreSQL...";
+            sleep 2;
+          done
+
+      - name: Build backend
+        working-directory: back
+        run: cargo build -F "production" --release
+
+    #   - name: Run tests
+    #     working-directory: back
+    #     env:
+    #       DATABASE_URL: ${{ env.DATABASE_URL }}
+    #     run: cargo test
