@@ -7,11 +7,11 @@ pub async fn get_favorited(
     struct FavoritedView {
         favorited: bool,
     }
-    tide::log::info!(
-        "article: {}, follower: {}",
-        article_id.to_string(),
-        follower_id.to_string()
-    );
+    // tide::log::info!(
+    //     "article: {}, follower: {}",
+    //     article_id.to_string(),
+    //     follower_id.to_string()
+    // );
     let row = sqlx::query_as_unchecked!(
         FavoritedView,
         r#"

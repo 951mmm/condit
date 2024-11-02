@@ -24,7 +24,17 @@ fn empty_or_statement(statement: &str, val: &String) -> String {
     }
 }
 
+fn res_query_string(query_string: &str) -> String {
+    let mut res_query_string = String::new();
+    res_query_string.push('%');
 
+    for c in query_string.chars() {
+        res_query_string.push(c);
+        res_query_string.push('%');
+    }   
+
+    res_query_string
+}
 
 /// create sql expr quickly
 /// gen sql like:
@@ -82,3 +92,4 @@ impl Joiner {
         self.inner.clone()
     }
 }
+

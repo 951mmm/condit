@@ -1,3 +1,5 @@
+use super::res_query_string;
+
 #[derive(serde::Deserialize)]
 struct TagNamesView {
     name: String,
@@ -60,7 +62,12 @@ pub async fn delete(db_pool: &sqlx::PgPool, article_id: uuid::Uuid) -> tide::Res
     }
 }
 
-pub async fn list(db_pool: &sqlx::PgPool) -> tide::Result<Vec<String>> {
+pub async fn list(db_pool: &sqlx::PgPool, query: &crate::services::tag::list::Req) -> tide::Result<Vec<String>> {
+    let crate::services::tag::list::Req {
+        query_string
+    } = &query;
+    let res_query_string = res_query_string(query_string);
+
     let rows = sqlx::query_as!(
         TagNamesView,
         r#"
@@ -72,12 +79,14 @@ pub async fn list(db_pool: &sqlx::PgPool) -> tide::Result<Vec<String>> {
         rank as (
         	select name, count(follower.user_id) as hot from tag
         	left join follower on follower.article_id=tag.article_id
+            where name ilike $1
         	group by name
         	order by hot desc
         	limit 10
         )
         select name from rank;
-        "#
+        "#,
+        res_query_string
     )
     .fetch_all(db_pool)
     .await?;

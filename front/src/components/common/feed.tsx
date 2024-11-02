@@ -5,6 +5,7 @@ import {
   atomFeedQueryType,
   atomPage,
   atomQueryLimit,
+  atomQueryString,
 } from "../../stores/feed";
 import { Article } from "../../api/article";
 import { useEffect, useState } from "react";
@@ -24,6 +25,7 @@ export function Feed() {
   const [page, setPage] = useAtom(atomPage);
   const limit = useAtomValue(atomQueryLimit);
   const [favorTrigger, setFavorTrigger] = useAtom(atomFavorTrigger);
+  const queryString = useAtomValue(atomQueryString);
 
   // ANCHOR effect
   useEffect(() => {
@@ -40,9 +42,11 @@ export function Feed() {
 
     async function initArticles() {
       setLoading(true);
+      console.log("feed type is", feedType)
       try {
+      
         const { articles, articlesCount } = await Article.list.handler(
-          `${feedQuery}limit=${limit}&offset=${limit * (page - 1)}`,
+          `${feedQuery}limit=${limit}&offset=${limit * (page - 1)}&query_string=${feedType === "tag" ? "" : queryString}`,
           signal
         );
       
@@ -58,7 +62,7 @@ export function Feed() {
     return () => {
       controller.abort();
     };
-  }, [feedType, feedQuery, page, favorTrigger]);
+  }, [feedType, feedQuery, page, favorTrigger, queryString]);
 
   // ANCHOR render
   if (loading) {

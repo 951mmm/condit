@@ -31,7 +31,12 @@ pub async fn list(
         favorited,
         limit,
         offset,
+        query_string
     } = &query;
+
+    let res_query_string = res_query_string(query_string);
+
+    tide::log::info!("resolved query string is: {}", res_query_string);
 
     let sql_string = format!(
         r#"
@@ -52,6 +57,7 @@ pub async fn list(
             tag.article_id=article.id
             {}
             {}
+        where title ilike '{}'
         group by article.id
         order by updated_at desc
         limit {} offset {};
@@ -67,9 +73,9 @@ pub async fn list(
             inner join condituser on favoriting.follower_id=condituser.id
         )"#,
             favorited
-        ),
-        empty_or_expr("and condituser.username=", author),
-        empty_or_expr("and tag.name=", tag),
+        ),// 若查询的favorited非空，则进行该子查询
+        empty_or_expr("and condituser.username=", author), //在个人主页中，需要显示自己写的文章
+        empty_or_expr("and tag.name=", tag), // 根据tag筛选文章
         empty_or_expr(
             r#"
             inner join favoriting_name on 
@@ -78,8 +84,9 @@ pub async fn list(
             "#,
             favorited
         ),
-        limit,
-        offset,
+        res_query_string, // 搜索框查询
+        limit, 
+        offset, // 分页插查询
     );
 
     // total cnt query
@@ -96,6 +103,7 @@ pub async fn list(
             tag.article_id=article.id
             {}
             {}
+        where title ilike '{}'
         "#,
         empty_or_statement(
             r#"
@@ -119,6 +127,7 @@ pub async fn list(
             "#,
             favorited
         ),
+        res_query_string
     );
 
     // tide::log::info!("sql string is: {}", sql_string);

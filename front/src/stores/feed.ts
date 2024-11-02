@@ -58,3 +58,5 @@ export const atomQueryLimit = atom(10);
 export const atomPage = atom(1);
 
 export const atomFavorTrigger = atom(false);
+
+export const atomQueryString = atom("");

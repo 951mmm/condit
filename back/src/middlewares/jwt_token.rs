@@ -74,7 +74,6 @@ impl<State: Clone + Send + Sync + 'static> tide::Middleware<State> for Ware {
                 );
                 match payload {
                     Ok(payload) => {
-                        tide::log::info!("JWT token claims is {:?}", payload.claims);
                         req.set_ext(payload.claims);
                         return Ok(next.run(req).await);
                     },
