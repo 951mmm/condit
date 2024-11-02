@@ -20,7 +20,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install yarn
         run: npm install yarn -g
@@ -40,9 +40,9 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_USER: ${{ secrets.DB_USER }}      # 使用 GitHub Secrets
+          POSTGRES_USER: ${{ secrets.DB_USER }} # 使用 GitHub Secrets
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }} # 使用 GitHub Secrets
-          POSTGRES_DB: ${{ secrets.DB_NAME }}          # 使用 GitHub Secrets
+          POSTGRES_DB: ${{ secrets.DB_NAME }} # 使用 GitHub Secrets
         ports:
           - 5432:5432
     env:
@@ -54,6 +54,9 @@ jobs:
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable # 指定为 stable，或替换为 nightly、1.60.0 等
+          override: true
 
       - name: Wait for PostgreSQL to be ready
         run: |
