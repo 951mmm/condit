@@ -3,12 +3,36 @@ import { Article } from "../../api/article";
 import { useState } from "react";
 import { ArticleTag } from "./article-tag";
 import { FavoriteButton } from "./favorite-button";
+import { useAtomValue } from "jotai";
+import { atomQueryString } from "../../stores/feed";
+
+const HightLightStyle = { backgroundColor: "yellow", display: "inline" };
+interface HightLightTextProps {
+  text: string;
+  keyword: string;
+}
+function HightLightText({ text, keyword }: HightLightTextProps) {
+  let highlightedText = text.split("").map((char, index) => {
+    if (keyword.includes(char))
+      return (
+        <div key={index} style={HightLightStyle}>
+          {char}
+        </div>
+      );
+    else return char;
+  });
+
+  return <>{highlightedText}</>;
+}
 
 interface ArticlePreviewProps {
   article: Article.Article;
 }
 
 export function ArticlePreview({ article }: ArticlePreviewProps) {
+  // ANCHOR store
+  const queryString = useAtomValue(atomQueryString);
+  // ANCHOR render
   return (
     <div className="article-preview">
       <div className="article-meta">
@@ -42,7 +66,10 @@ export function ArticlePreview({ article }: ArticlePreviewProps) {
         </div>
       </div>
       <Link to={`/article/${article.slug}`} className="preview-link">
-        <h1>{article.title}</h1>
+        <h1>
+          {/* {article.title} */}
+          <HightLightText text={article.title} keyword={queryString} />
+        </h1>
         <p>{article.description}</p>
         <span>Read more...</span>
         <ul className="tag-list">
