@@ -48,7 +48,7 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U ${{ secrets.DB_USER }}" 
           --health-interval 10s
-          --health-timeout 5s
+          --health-timeout 15s
           --health-retries 5
 
     env:
