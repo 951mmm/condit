@@ -55,7 +55,7 @@ jobs:
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable # 指定为 stable，或替换为 nightly、1.60.0 等
+          toolchain: 1.76.0 # 指定为 stable，或替换为 nightly、1.60.0 等
           override: true
 
       - name: Wait for PostgreSQL to be ready

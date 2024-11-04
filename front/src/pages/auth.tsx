@@ -35,7 +35,7 @@ export function Auth({ type }: AuthProps) {
                   </Link>
                 ) : (
                   <Link to="/login" className="text-xs-center">
-                    Heed an account?
+                    Had an account?
                   </Link>
                 )}
               </p>
